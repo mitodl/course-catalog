@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "course_catalog" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Hi, I'm course_catalog" %}</h1>
+<div id="container"></div>
+{% load render_bundle %}
+{% render_bundle 'root' %}
+{% endblock %}
