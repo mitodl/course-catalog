@@ -21,14 +21,14 @@ VERSION = "0.0.0"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_string('SECRET_KEY', None)
+SECRET_KEY = get_string('SECRET_KEY', "terribly_unsafe_default_secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = get_bool('DEBUG', False)
 
 ALLOWED_HOSTS = ['*']
 
-SECURE_SSL_REDIRECT = get_bool('COURSE_CATALOG_SECURE_SSL_REDIRECT', True)
+SECURE_SSL_REDIRECT = get_bool('COURSE_CATALOG_SECURE_SSL_REDIRECT', False)
 
 
 WEBPACK_LOADER = {
@@ -120,13 +120,20 @@ DEFAULT_DATABASE_CONFIG = dj_database_url.parse(
 )
 DEFAULT_DATABASE_CONFIG['CONN_MAX_AGE'] = get_int('COURSE_CATALOG_DB_CONN_MAX_AGE', 0)
 
-if get_bool('COURSE_CATALOG_DB_DISABLE_SSL', False):
+if get_bool('COURSE_CATALOG_DB_DISABLE_SSL', True):
     DEFAULT_DATABASE_CONFIG['OPTIONS'] = {}
 else:
     DEFAULT_DATABASE_CONFIG['OPTIONS'] = {'sslmode': 'require'}
 
 DATABASES = {
-    'default': DEFAULT_DATABASE_CONFIG
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'course_catalog',
+        'USER': 'postgres',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
 }
 
 # Internationalization
@@ -385,7 +392,5 @@ if DEBUG:
 # List of mandatory settings. If any of these is not set, the app will not start
 # and will raise an ImproperlyConfigured exception
 MANDATORY_SETTINGS = [
-    'MAILGUN_URL',
-    'MAILGUN_KEY',
     'SECRET_KEY',
 ]
