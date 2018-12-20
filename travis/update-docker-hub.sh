@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-export NEXT=f75877
+export NEXT=$(date | md5sum | cut -c -6)
 export PROJECT_NAME="course_catalog"
 echo "Next hash is $NEXT"
 
@@ -14,3 +14,5 @@ echo docker build -t $WATCH_IMAGE -f travis/Dockerfile-travis-watch-build .
 echo docker push $WEB_IMAGE
 echo docker push $WATCH_IMAGE
 
+sed -i "s/^FROM mitodl\/.+$/$WEB_IMAGE/" travis/Dockerfile-travis-web
+sed -i "s/^FROM mitodl\/.+$/$WATCH_IMAGE/" travis/Dockerfile-travis-watch
