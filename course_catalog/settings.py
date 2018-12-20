@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     'raven.contrib.django.raven_compat',
     # Put our apps after this point
     'course_catalog',
+    'rest_framework',
 )
 
 DISABLE_WEBPACK_LOADER_STATS = get_bool("DISABLE_WEBPACK_LOADER_STATS", False)
@@ -353,6 +354,7 @@ CACHES = {
 def get_all_config_keys():
     """Returns all the configuration keys from both environment and configuration files"""
     return list(os.environ.keys())
+
 
 COURSE_CATALOG_FEATURES_PREFIX = get_string('COURSE_CATALOG_FEATURES_PREFIX', 'FEATURE_')
 FEATURES = {
