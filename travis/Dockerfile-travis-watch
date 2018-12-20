@@ -1,4 +1,4 @@
-FROM mitodl/course_catalog_watch_travis
+FROM mitodl/course_catalog_watch_travis_f75877
 
 WORKDIR /src
 
