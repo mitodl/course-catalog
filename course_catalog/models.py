@@ -18,3 +18,18 @@ class Course(models.Model):
     enrollment_end = models.DateTimeField(null=True)
     image = JSONField(null=True)
     raw_json = JSONField(null=True)
+
+
+class CourseInstructor(models.Model):
+    first_name = models.CharField(max_length=128)
+    last_name = models.CharField(max_length=128)
+
+
+class CourseTopic(models.Model):
+    name = models.CharField(max_length=128)
+
+
+class CoursePrice(models.Model):
+    price = models.DecimalField()
+    mode = models.CharField()
+    upgrade_deadline = models.DateTimeField(null=True)
