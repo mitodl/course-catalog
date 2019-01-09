@@ -1,23 +1,38 @@
+"""
+course_catalog models
+"""
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
 
 class CourseInstructor(models.Model):
+    """
+    Instructors for all courses
+    """
     first_name = models.CharField(max_length=128)
     last_name = models.CharField(max_length=128)
 
 
 class CourseTopic(models.Model):
+    """
+    Topics for all courses (e.g. "History")
+    """
     name = models.CharField(max_length=128, unique=True)
 
 
 class CoursePrice(models.Model):
+    """
+    Price model for all courses (e.g. "price": 0.00, "mode": "audit")
+    """
     price = models.DecimalField(decimal_places=2, max_digits=5)
     mode = models.CharField(max_length=128)
     upgrade_deadline = models.DateTimeField(null=True)
 
 
 class Course(models.Model):
+    """
+    Course model for courses on all platforms
+    """
     course_id = models.CharField(max_length=128, unique=True)
     title = models.CharField(max_length=256)
     short_description = models.CharField(max_length=1024)
