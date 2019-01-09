@@ -37,6 +37,7 @@ services:
       CELERY_RESULT_BACKEND: redis://redis:6379/4
       DOCKER_HOST: ${DOCKER_HOST:-missing}
       WEBPACK_DEV_SERVER_HOST: ${WEBPACK_DEV_SERVER_HOST:-localhost}
+      SECRET_KEY: ${SECRET_KEY:-terribly_unsafe_secret_key}
     env_file: .env
 
   web:
