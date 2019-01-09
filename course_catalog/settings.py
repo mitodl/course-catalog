@@ -116,10 +116,9 @@ WSGI_APPLICATION = 'course_catalog.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-# DEFAULT_DATABASE_CONFIG = dj_database_url.parse(
-#     get_string('DATABASE_URL', None)
-# )
-DEFAULT_DATABASE_CONFIG = {}
+DEFAULT_DATABASE_CONFIG = dj_database_url.parse(
+    get_string('DATABASE_URL', None)
+)
 DEFAULT_DATABASE_CONFIG['CONN_MAX_AGE'] = get_int('COURSE_CATALOG_DB_CONN_MAX_AGE', 0)
 
 if get_bool('COURSE_CATALOG_DB_DISABLE_SSL', False):
@@ -128,15 +127,7 @@ else:
     DEFAULT_DATABASE_CONFIG['OPTIONS'] = {'sslmode': 'require'}
 
 DATABASES = {
-    # 'default': DEFAULT_DATABASE_CONFIG
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'catalog',
-        'USER': 'postgres',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': DEFAULT_DATABASE_CONFIG
 }
 
 # Internationalization
