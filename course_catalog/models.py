@@ -35,7 +35,7 @@ class Course(models.Model):
     """
     course_id = models.CharField(max_length=128, unique=True)
     title = models.CharField(max_length=256)
-    short_description = models.CharField(max_length=1024)
+    short_description = models.CharField(max_length=1024, null=True)
     level = models.CharField(max_length=128)
     semester = models.CharField(max_length=10)
     language = models.CharField(max_length=128)
