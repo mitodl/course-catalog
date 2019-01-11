@@ -1,3 +1,6 @@
+"""
+course_catalog helper functions for tasks
+"""
 import json
 
 from datetime import datetime
@@ -13,6 +16,9 @@ from course_catalog.settings import EDX_API_CLIENT_ID, EDX_API_CLIENT_SECRET
 
 
 def get_access_token():
+    """
+    Get an access token for edx
+    """
     post_data = {
         "grant_type": "client_credentials",
         "client_id": EDX_API_CLIENT_ID,
@@ -24,6 +30,9 @@ def get_access_token():
 
 
 def parse_mitx_json_data(course_data):
+    """
+    Main function to parse edx json data
+    """
     # Make changes atomically so we don't end up with partially saved/deleted data
     with transaction.atomic():
 
@@ -56,15 +65,13 @@ def parse_mitx_json_data(course_data):
             except ValueError:
                 year = datetime.strptime(course_run.get("start"), "%Y-%m-%dT%H:%M:%S.%fZ").year
 
-            semester = semester_mapping.get(course_run_key[-6:-4], None)
-
             course_fields = {
                 "course_id": course_run_key,
                 "title": course_run.get("title"),
                 "short_description": course_run.get("short_description"),
                 "full_description": course_run.get("full_description"),
                 "level": course_run.get("level_type"),
-                "semester": semester,
+                "semester": semester_mapping.get(course_run_key[-6:-4], None),
                 "language": course_run.get("content_language"),
                 "platform": PlatformType.mitx.value,
                 "year": year,
@@ -84,30 +91,34 @@ def parse_mitx_json_data(course_data):
                 continue
             course = course_serializer.save()
             # print("(" + course_data.get("key") + ", " + course_run_key + ") is valid")
-            # Clear out topics and re-add them
-            course.topics.clear()
-            for topic in course_data.get("subjects"):
-                course_topic, _ = CourseTopic.objects.get_or_create(name=topic.get("name"))
-                course.topics.add(course_topic)
 
-            # Clear out the instructors and re-add them
-            course.instructors.clear()
-            # In the samples it looks like instructors is never populated and staff is
-            for instructor in course_run.get("staff"):
-                instructor_fields = {
-                    "first_name": instructor.get("given_name"),
-                    "last_name": instructor.get("family_name"),
-                }
-                course_instructor, _ = CourseInstructor.objects.get_or_create(**instructor_fields)
-                course.instructors.add(course_instructor)
+            handle_many_to_many_fields(course, course_data, course_run)
 
-            # Clear out the prices and re-add them
-            course.prices.clear()
-            for price in course_run.get("seats"):
-                price_fields = {
-                    "price": price.get("price"),
-                    "mode": price.get("type"),
-                    "upgrade_deadline": price.get("upgrade_deadline"),
-                }
-                course_price, _ = CoursePrice.objects.get_or_create(**price_fields)
-                course.prices.add(course_price)
+
+def handle_many_to_many_fields(course, course_data, course_run):
+    """
+    Helper function to create or link the many to many fields
+    """
+    # Clear out topics and re-add them
+    course.topics.clear()
+    for topic in course_data.get("subjects"):
+        course_topic, _ = CourseTopic.objects.get_or_create(name=topic.get("name"))
+        course.topics.add(course_topic)
+
+    # Clear out the instructors and re-add them
+    course.instructors.clear()
+    # In the samples it looks like instructors is never populated and staff is
+    for instructor in course_run.get("staff"):
+        course_instructor, _ = CourseInstructor.objects.get_or_create(first_name=instructor.get("given_name"),
+                                                                      last_name=instructor.get("family_name"))
+        course.instructors.add(course_instructor)
+
+    # Clear out the prices and re-add them
+    course.prices.clear()
+    for price in course_run.get("seats"):
+        course_price, _ = CoursePrice.objects.get_or_create(
+            price=price.get("price"),
+            mode=price.get("type"),
+            upgrade_deadline=price.get("upgrade_deadline"),
+        )
+        course.prices.add(course_price)

@@ -1,4 +1,6 @@
-
+"""
+course_catalog tasks
+"""
 import requests
 from celery.task import task
 
@@ -7,6 +9,9 @@ from course_catalog.tasks_helpers import get_access_token, parse_mitx_json_data
 
 @task
 def get_edx_data():
+    """
+    Task to sync mitx data with the database
+    """
     url = "https://api.edx.org/catalog/v1/catalogs/248/courses"
     while True:
         # print(url)

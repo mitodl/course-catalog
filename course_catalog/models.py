@@ -53,4 +53,3 @@ class Course(models.Model):
     instructors = models.ManyToManyField(CourseInstructor, blank=True, related_name="courses")
     topics = models.ManyToManyField(CourseTopic, blank=True, related_name="courses")
     prices = models.ManyToManyField(CoursePrice, blank=True, related_name="courses")
-
