@@ -33,6 +33,15 @@ class CourseTopicSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class CourseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Course model
+    """
+    class Meta:
+        model = Course
+        fields = "__all__"
+
+
 class OCWCourseSerializer(serializers.ModelSerializer):
     """
     This is a serializer for de-serializing parsed OCW Plone JSON data to be saved as Course model instances
