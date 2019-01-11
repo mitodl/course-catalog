@@ -1,7 +1,6 @@
 """
 course_catalog models
 """
-from django.utils import timezone
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
