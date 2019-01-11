@@ -7,7 +7,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('course_catalog', '0004_make_short_description_nullable_20190110_2018'),
+        ('course_catalog', '0005_course_last_modified'),
     ]
 
     operations = [
