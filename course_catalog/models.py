@@ -11,7 +11,7 @@ class TimestampedModel(models.Model):
     It provides created_on and last_updated timestamps automatically.
     """
     created_on = models.DateTimeField(auto_now_add=True)
-    last_updated = models.DateTimeField(auto_now=True)
+    updated_on = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
