@@ -1,11 +1,21 @@
 """
 course_catalog models
 """
+from django.utils import timezone
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
 
-class CourseInstructor(models.Model):
+class TimestampedModel(models.Model):
+    """
+    Parent class for all models under course_catalog app.
+    It provides created_on and last_updated timestamps automatically.
+    """
+    created_on = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(auto_now=True)
+
+
+class CourseInstructor(TimestampedModel):
     """
     Instructors for all courses
     """
@@ -13,14 +23,14 @@ class CourseInstructor(models.Model):
     last_name = models.CharField(max_length=128)
 
 
-class CourseTopic(models.Model):
+class CourseTopic(TimestampedModel):
     """
     Topics for all courses (e.g. "History")
     """
     name = models.CharField(max_length=128, unique=True)
 
 
-class CoursePrice(models.Model):
+class CoursePrice(TimestampedModel):
     """
     Price model for all courses (e.g. "price": 0.00, "mode": "audit")
     """
@@ -29,7 +39,7 @@ class CoursePrice(models.Model):
     upgrade_deadline = models.DateTimeField(null=True)
 
 
-class Course(models.Model):
+class Course(TimestampedModel):
     """
     Course model for courses on all platforms
     """
