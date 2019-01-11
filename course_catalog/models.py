@@ -13,6 +13,9 @@ class TimestampedModel(models.Model):
     """
     created_on = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        abstract = True
 
 
 class CourseInstructor(TimestampedModel):
