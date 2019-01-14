@@ -153,7 +153,6 @@ def get_year_and_semester(course_run, course_run_key):
             year = course_run.get("start")[:4]
         else:
             year = None
-    # match = re.search("[0-9]{4}_Q[1|2|3]", course_run_key)
 
-    print(f"{course_run_key} {year} {semester}")
+    # print(f"{course_run_key} {year} {semester}")
     return year, semester
