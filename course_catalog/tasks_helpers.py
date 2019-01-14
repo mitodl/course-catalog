@@ -4,13 +4,10 @@ course_catalog helper functions for tasks
 import json
 import logging
 import re
-
 from datetime import datetime
-
 import pytz
 import requests
 from django.db import transaction
-
 from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_KEYS
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
@@ -161,3 +158,17 @@ def get_year_and_semester(course_run, course_run_key):
 
     # print(f"{course_run_key} {year} {semester}")
     return year, semester
+
+
+def load_json_from_string(s):
+    """
+    Loads the passed string as a JSON object
+    """
+    return json.loads(s)
+
+
+def digest_master_json(master_json):
+    """
+    Takes in OCW course master json to store it in DB
+    """
+

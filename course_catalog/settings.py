@@ -384,6 +384,23 @@ if DEBUG:
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     ) + MIDDLEWARE
 
+# EDX API Credentials
+COURSE_API_DEFAULT_LIMIT = 10
+COURSE_API_MAX_LIMIT = 10
+EDX_API_URL = get_string('EDX_API_URL', None)
+EDX_API_CLIENT_ID = get_string('EDX_API_CLIENT_ID', None)
+EDX_API_CLIENT_SECRET = get_string('EDX_API_CLIENT_SECRET', None)
+
+# S3 Bucket info for OCW Plone CMS exports
+OCW_CONTENT_BUCKET_NAME = get_string("OCW_CONTENT_BUCKET_NAME", None)
+OCW_CONTENT_ACCESS_KEY = get_string("OCW_CONTENT_ACCESS_KEY", None)
+OCW_CONTENT_SECRET_ACCESS_KEY = get_string("OCW_CONTENT_SECRET_ACCESS_KEY", None)
+
+# S3 Bucket info for exporting OCW Plone media files
+OCW_LEARNING_COURSE_BUCKET_NAME = get_string("OCW_LEARNING_COURSE_BUCKET_NAME", None)
+OCW_LEARNING_COURSE_ACCESS_KEY = get_string("OCW_LEARNING_COURSE_ACCESS_KEY", None)
+OCW_LEARNING_COURSE_SECRET_ACCESS_KEY = get_string("OCW_LEARNING_COURSE_SECRET_ACCESS_KEY", None)
+
 # List of mandatory settings. If any of these is not set, the app will not start
 # and will raise an ImproperlyConfigured exception
 MANDATORY_SETTINGS = [
@@ -392,9 +409,3 @@ MANDATORY_SETTINGS = [
     'SECRET_KEY',
 ]
 
-COURSE_API_DEFAULT_LIMIT = 10
-COURSE_API_MAX_LIMIT = 10
-
-EDX_API_URL = get_string('EDX_API_URL', None)
-EDX_API_CLIENT_ID = get_string('EDX_API_CLIENT_ID', None)
-EDX_API_CLIENT_SECRET = get_string('EDX_API_CLIENT_SECRET', None)
