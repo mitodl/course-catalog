@@ -1,4 +1,4 @@
-django==2.0.8
+django==2.0.10
 celery==4.2.0
 dj-database-url==0.4.2
 django-redis==4.7.0
@@ -14,4 +14,4 @@ redis==2.10.6
 requests
 uwsgi
 djangorestframework
-ocw-data-parser==0.0.5
+ocw-data-parser==0.0.6
