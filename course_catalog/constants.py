@@ -12,6 +12,12 @@ class PlatformType(Enum):
     mitx = "mitx"
 
 
+MIT_OWNER_KEYS = [
+    'MITx',
+    'MITx_PRO',
+]
+
+
 semester_mapping = {
     "1T": "spring",
     "2T": "summer",
