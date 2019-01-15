@@ -6,7 +6,7 @@ from factory.fuzzy import FuzzyChoice
 from course_catalog.constants import PlatformType
 from course_catalog.models import Course, CourseInstructor, CourseTopic, CoursePrice
 
-# pylint: disable=unused-argument,unnecessary-lambda
+# pylint: disable=unused-argument
 
 
 class CourseInstructorFactory(DjangoModelFactory):
@@ -31,7 +31,7 @@ class CourseTopicFactory(DjangoModelFactory):
 class CoursePriceFactory(DjangoModelFactory):
     """Factory for course prices"""
 
-    price = factory.Sequence(lambda n: float(n))
+    price = factory.Sequence(lambda n: 0.00 + float(n))
     mode = factory.Faker("word")
 
     class Meta:
