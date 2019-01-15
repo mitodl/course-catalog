@@ -392,5 +392,6 @@ MANDATORY_SETTINGS = [
     'SECRET_KEY',
 ]
 
+EDX_API_URL = get_string('EDX_API_URL', None)
 EDX_API_CLIENT_ID = get_string('EDX_API_CLIENT_ID', None)
 EDX_API_CLIENT_SECRET = get_string('EDX_API_CLIENT_SECRET', None)
