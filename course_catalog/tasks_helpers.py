@@ -2,6 +2,7 @@
 course_catalog helper functions for tasks
 """
 import json
+import logging
 import re
 
 from datetime import datetime
@@ -14,7 +15,9 @@ from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_K
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
 from course_catalog.settings import EDX_API_CLIENT_ID, EDX_API_CLIENT_SECRET
-from course_catalog.utils import log
+
+
+log = logging.getLogger(__name__)
 
 
 def get_access_token():

@@ -1,12 +1,16 @@
 """
 course_catalog tasks
 """
+import logging
+
 import requests
 from celery.task import task
 
 from course_catalog.settings import EDX_API_URL
 from course_catalog.tasks_helpers import get_access_token, parse_mitx_json_data
-from course_catalog.utils import log
+
+
+log = logging.getLogger(__name__)
 
 
 @task
