@@ -18,10 +18,10 @@ def get_edx_data():
         # print(url)
         access_token = get_access_token()
         response = requests.get(url, headers={"Authorization": "JWT " + access_token})
-        if response.status_code == 429:
-            break
-        else:
+        if response.status_code == 200:
             for course_data in response.json()["results"]:
                 parse_mitx_json_data(course_data)
+        else:
+            break
 
         url = response.json()["next"]
