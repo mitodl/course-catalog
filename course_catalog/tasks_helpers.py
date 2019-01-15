@@ -14,6 +14,7 @@ from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_K
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
 from course_catalog.settings import EDX_API_CLIENT_ID, EDX_API_CLIENT_SECRET
+from course_catalog.utils import log
 
 
 def get_access_token():
@@ -92,6 +93,7 @@ def parse_mitx_json_data(course_data):
             if not course_serializer.is_valid():
                 # print(course_serializer.errors)
                 # print("(" + course_data.get("key") + ", " + course_run_key + ") is not valid")
+                log.exception("Course %s is not valid: %s", course_run_key, course_serializer.errors)
                 continue
             course = course_serializer.save()
             # print("(" + course_data.get("key") + ", " + course_run_key + ") is valid")

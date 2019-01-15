@@ -6,6 +6,7 @@ from celery.task import task
 
 from course_catalog.settings import EDX_API_URL
 from course_catalog.tasks_helpers import get_access_token, parse_mitx_json_data
+from course_catalog.utils import log
 
 
 @task
@@ -22,6 +23,7 @@ def get_edx_data():
             for course_data in response.json()["results"]:
                 parse_mitx_json_data(course_data)
         else:
+            log.exception("Bad response status %s for %s", str(response.status_code), url)
             break
 
         url = response.json()["next"]
