@@ -37,6 +37,10 @@ class CourseSerializer(serializers.ModelSerializer):
     """
     Serializer for Course model
     """
+    instructors = CourseInstructorSerializer(read_only=True, many=True, allow_null=True)
+    topics = CourseTopicSerializer(read_only=True, many=True, allow_null=True)
+    prices = CoursePriceSerializer(read_only=True, many=True, allow_null=True)
+
     class Meta:
         model = Course
         fields = "__all__"
