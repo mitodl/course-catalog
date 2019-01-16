@@ -8,7 +8,7 @@ from datetime import datetime
 import pytz
 import requests
 from django.db import transaction
-from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_KEYS
+from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_KEYS, ocw_edx_mapping
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
 from course_catalog.settings import EDX_API_CLIENT_ID, EDX_API_CLIENT_SECRET
@@ -167,8 +167,81 @@ def load_json_from_string(s):
     return json.loads(s)
 
 
-def digest_master_json(master_json):
+def digest_ocw_course_master_json(master_json, last_modified, course_prefix):
     """
     Takes in OCW course master json to store it in DB
     """
+    with transaction.atomic():
+        try:
+            course_instance = Course.objects.get(course_id=master_json.get("uid"))
+        except Course.DoesNotExist:
+            course_instance = None
+
+        course_fields = {
+            "course_id": master_json.get("uid"),
+            "title": master_json.get("title"),
+            "short_description": master_json.get("description"),
+            "level": master_json.get("course_level"),
+            "semester": master_json.get("from_semester"),
+            "language": master_json.get("language"),
+            "platform": PlatformType.ocw.value,
+            "year": master_json.get("from_year"),
+            "image_src": master_json.get("image_src"),
+            "image_description": master_json.get("image_description"),
+            "last_modified": last_modified,
+            "raw_json": master_json,
+        }
+        start_date = master_json.get("effective_date")
+        end_date = master_json.get("expiration_date")
+        if start_date:
+            course_fields["start_date"] = start_date
+        else:
+            print(master_json.get("title") + ": has start_date of " + start_date)
+            with open("/Users/method/Desktop/no_start_date_courses.txt", "a+") as f:
+                f.write(course_prefix + "\n")
+        if end_date:
+            course_fields["end_date"] = end_date
+
+        course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
+        if not course_serializer.is_valid():
+            print("Course UUID: " + master_json.get("uid"))
+            print("Course title: " + master_json.get("title"))
+            print("Startdate: " + str(start_date))
+            print("Enddate: " + str(end_date))
+            print(course_serializer.errors)
+        course = course_serializer.save()
+
+        # Clear previous topics, instructors, and prices
+        course.topics.clear()
+        course.instructors.clear()
+        course.prices.clear()
+
+        # Handle topics
+        for topic_obj in master_json.get("course_collections"):
+            topic_name = get_ocw_topic(topic_obj)
+            course_topic, _ = CourseTopic.objects.get_or_create(name=topic_name)
+            course.topics.add(course_topic)
+
+        # Handle instructors
+        for instructor in master_json.get("instructors"):
+            course_instructor, _ = CourseInstructor.objects.get_or_create(first_name=instructor.get("first_name"),
+                                                                          last_name=instructor.get("last_name"))
+            course.instructors.add(course_instructor)
+
+        # Handle price
+        course_price, _ = CoursePrice.objects.get_or_create(price="0.00", mode="audit")
+        course.prices.add(course_price)
+
+
+def get_ocw_topic(topic_object):
+    """
+    Gets ocw_feature if that fails then ocw_subfeature and if that fails then ocw_speciality
+    """
+    topic = topic_object.get("ocw_feature")
+    if not topic:
+        topic = topic_object.get("ocw_subfeature")
+    if not topic:
+        topic = topic_object.get("ocw_speciality")
+    return ocw_edx_mapping.get(topic, None)
+
 

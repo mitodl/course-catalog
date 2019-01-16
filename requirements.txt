@@ -15,6 +15,7 @@ certifi==2018.11.29       # via requests
 chardet==3.0.4            # via requests
 decorator==4.3.0          # via ipython, traitlets
 dj-database-url==0.4.2
+django-extensions==2.1.4
 django-redis==4.7.0
 django-server-status==0.5.0
 django-webpack-loader==0.5.0
@@ -31,7 +32,7 @@ jedi==0.13.1              # via ipython
 jmespath==0.9.3           # via boto3, botocore
 kombu==4.2.1              # via celery, django-server-status
 newrelic==4.8.0.110
-ocw-data-parser==0.0.6
+ocw-data-parser==0.1.5
 parso==0.3.1              # via jedi
 pexpect==4.6.0            # via ipython
 pickleshare==0.7.5        # via ipython
@@ -45,7 +46,7 @@ raven==6.9.0
 redis==2.10.6
 requests==2.21.0
 s3transfer==0.1.13        # via boto3
-six==1.12.0               # via django-server-status, faker, prompt-toolkit, python-dateutil, traitlets
+six==1.12.0               # via django-extensions, django-server-status, faker, prompt-toolkit, python-dateutil, traitlets
 text-unidecode==1.2       # via faker
 traitlets==4.3.2          # via ipython
 urllib3==1.24.1           # via botocore, elasticsearch, requests

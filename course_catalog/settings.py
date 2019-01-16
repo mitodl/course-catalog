@@ -60,6 +60,7 @@ INSTALLED_APPS = (
     # Put our apps after this point
     'course_catalog',
     'rest_framework',
+    'django_extensions',
 )
 
 DISABLE_WEBPACK_LOADER_STATS = get_bool("DISABLE_WEBPACK_LOADER_STATS", False)
