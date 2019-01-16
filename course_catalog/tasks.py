@@ -47,6 +47,7 @@ def get_ocw_data():
     """
     Task to sync OCW course data with database
     """
+    errors = list()
     raw_data_bucket = boto3.resource('s3',
                                      aws_access_key_id=settings.OCW_CONTENT_ACCESS_KEY,
                                      aws_secret_access_key=settings.OCW_CONTENT_SECRET_ACCESS_KEY
@@ -76,4 +77,10 @@ def get_ocw_data():
                                   course_prefix.split("/")[-1])
         parser.upload_all_media_to_s3()
         master_json = parser.master_json
-        digest_ocw_course_master_json(master_json, sorted(last_modified_dates)[-1], course_prefix)
+        ret = digest_ocw_course_master_json(master_json, sorted(last_modified_dates)[-1], course_prefix)
+        if ret:
+            errors.append(ret)
+    with open("errors.txt", "a+") as f:
+        for item in errors:
+            f.write(str(item))
+            f.write("===================")

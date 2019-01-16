@@ -191,24 +191,20 @@ def digest_ocw_course_master_json(master_json, last_modified, course_prefix):
             "last_modified": last_modified,
             "raw_json": master_json,
         }
-        start_date = master_json.get("effective_date")
-        end_date = master_json.get("expiration_date")
-        if start_date:
-            course_fields["start_date"] = start_date
-        else:
-            print(master_json.get("title") + ": has start_date of " + start_date)
-            with open("/Users/method/Desktop/no_start_date_courses.txt", "a+") as f:
-                f.write(course_prefix + "\n")
-        if end_date:
-            course_fields["end_date"] = end_date
 
         course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
         if not course_serializer.is_valid():
             print("Course UUID: " + master_json.get("uid"))
             print("Course title: " + master_json.get("title"))
-            print("Startdate: " + str(start_date))
-            print("Enddate: " + str(end_date))
             print(course_serializer.errors)
+            for k in course_fields.keys():
+                if k != "raw_json":
+                    print(k + ": " + str(course_fields.get(k)))
+            error = {
+                'course_prefix': course_prefix,
+                'serializer_errors': str(course_serializer.errors)
+            }
+            return error
         course = course_serializer.save()
 
         # Clear previous topics, instructors, and prices
@@ -219,8 +215,9 @@ def digest_ocw_course_master_json(master_json, last_modified, course_prefix):
         # Handle topics
         for topic_obj in master_json.get("course_collections"):
             topic_name = get_ocw_topic(topic_obj)
-            course_topic, _ = CourseTopic.objects.get_or_create(name=topic_name)
-            course.topics.add(course_topic)
+            if topic_name:
+                course_topic, _ = CourseTopic.objects.get_or_create(name=topic_name)
+                course.topics.add(course_topic)
 
         # Handle instructors
         for instructor in master_json.get("instructors"):
