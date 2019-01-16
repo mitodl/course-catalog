@@ -25,9 +25,12 @@ def get_edx_data():
         response = requests.get(url, headers={"Authorization": "JWT " + access_token})
         if response.status_code == 200:
             for course_data in response.json()["results"]:
-                parse_mitx_json_data(course_data)
+                try:
+                    parse_mitx_json_data(course_data)
+                except Exception:  # pylint: disable=broad-except
+                    log.exception("Error encountered parsing MITx json")
         else:
-            log.exception("Bad response status %s for %s", str(response.status_code), url)
+            log.error("Bad response status %s for %s", str(response.status_code), url)
             break
 
         url = response.json()["next"]
