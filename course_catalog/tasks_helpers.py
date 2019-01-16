@@ -96,7 +96,7 @@ def parse_mitx_json_data(course_data):
             if not course_serializer.is_valid():
                 # print(course_serializer.errors)
                 # print("(" + course_data.get("key") + ", " + course_run_key + ") is not valid")
-                log.exception("Course %s is not valid: %s", course_run_key, course_serializer.errors)
+                log.error("Course %s is not valid: %s", course_run_key, course_serializer.errors)
                 continue
             course = course_serializer.save()
             # print("(" + course_data.get("key") + ", " + course_run_key + ") is valid")
