@@ -167,13 +167,17 @@ def load_json_from_string(s):
     return json.loads(s)
 
 
-def digest_ocw_course_master_json(master_json, last_modified, course_prefix):
+def digest_ocw_course_master_json(master_json, last_modified):
     """
     Takes in OCW course master json to store it in DB
+    Returns True if the course was updated and False otherwise
     """
     with transaction.atomic():
         try:
             course_instance = Course.objects.get(course_id=master_json.get("uid"))
+            # Make sure that the data we are syncing is newer than what we already have
+            if last_modified <= course_instance.last_modified:
+                return False
         except Course.DoesNotExist:
             course_instance = None
 
@@ -194,17 +198,11 @@ def digest_ocw_course_master_json(master_json, last_modified, course_prefix):
 
         course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
         if not course_serializer.is_valid():
-            print("Course UUID: " + master_json.get("uid"))
-            print("Course title: " + master_json.get("title"))
-            print(course_serializer.errors)
-            for k in course_fields.keys():
-                if k != "raw_json":
-                    print(k + ": " + str(course_fields.get(k)))
-            error = {
-                'course_prefix': course_prefix,
-                'serializer_errors': str(course_serializer.errors)
-            }
-            return error
+            # course_fields.pop('raw_json')
+            # print(course_fields)
+            # print(course_serializer.errors)
+            log.error("Course %s is not valid: %s", master_json.get("uid"), course_serializer.errors)
+            return False
         course = course_serializer.save()
 
         # Clear previous topics, instructors, and prices
@@ -226,19 +224,19 @@ def digest_ocw_course_master_json(master_json, last_modified, course_prefix):
             course.instructors.add(course_instructor)
 
         # Handle price
-        course_price, _ = CoursePrice.objects.get_or_create(price="0.00", mode="audit")
+        course_price, _ = CoursePrice.objects.get_or_create(price="0.00", mode="audit", upgrade_deadline=None)
         course.prices.add(course_price)
+        return True
 
 
 def get_ocw_topic(topic_object):
     """
     Gets ocw_feature if that fails then ocw_subfeature and if that fails then ocw_speciality
     """
-    topic = topic_object.get("ocw_feature")
-    if not topic:
-        topic = topic_object.get("ocw_subfeature")
-    if not topic:
-        topic = topic_object.get("ocw_speciality")
-    return ocw_edx_mapping.get(topic, None)
 
+    # Get topic list by specialty first, subfeature second, and feature third
+    topics = (ocw_edx_mapping.get(topic_object.get("ocw_speciality")) or
+              ocw_edx_mapping.get(topic_object.get("ocw_subfeature")) or
+              ocw_edx_mapping.get(topic_object.get("ocw_feature")))
 
+    return topics
