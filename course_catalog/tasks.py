@@ -7,13 +7,12 @@ import requests
 import boto3
 from celery.task import task
 from django.conf import settings
-from ocw_data_parser import OCWParser
 from course_catalog.constants import NON_COURSE_DIRECTORIES
 from course_catalog.settings import EDX_API_URL
 from course_catalog.tasks_helpers import (get_access_token,
                                           parse_mitx_json_data,
                                           load_json_from_string,
-                                          digest_ocw_course_master_json)
+                                          digest_ocw_course)
 
 
 log = logging.getLogger(__name__)
@@ -72,15 +71,7 @@ def get_ocw_data():
             loaded_raw_jsons_for_course.append(load_json_from_string(obj.get()["Body"].read()))
             last_modified_dates.append(obj.get()["LastModified"])
 
-        parser = OCWParser("", "", loaded_raw_jsons_for_course)
-        parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
-                                  settings.OCW_LEARNING_COURSE_ACCESS_KEY,
-                                  settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
-                                  course_prefix.split("/")[-1])
-        parser.upload_all_media_to_s3()
-        # Get master json from parser
-        master_json = parser.master_json
         try:
-            digest_ocw_course_master_json(master_json, sorted(last_modified_dates)[-1])
+            digest_ocw_course(loaded_raw_jsons_for_course, sorted(last_modified_dates)[-1], course_prefix)
         except Exception:  # pylint: disable=broad-except
             log.exception("Error encountered parsing OCW json for %s", course_prefix)

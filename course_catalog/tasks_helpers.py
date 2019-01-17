@@ -8,6 +8,8 @@ from datetime import datetime
 import pytz
 import requests
 from django.db import transaction
+from django.conf import settings
+from ocw_data_parser import OCWParser
 from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_KEYS, ocw_edx_mapping
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
@@ -167,20 +169,33 @@ def load_json_from_string(s):
     return json.loads(s)
 
 
-def digest_ocw_course_master_json(master_json, last_modified):
+def digest_ocw_course(raw_jsons, last_modified, course_prefix):
     """
     Takes in OCW course master json to store it in DB
     Returns True if the course was updated and False otherwise
     """
-    with transaction.atomic():
-        try:
-            course_instance = Course.objects.get(course_id=master_json.get("uid"))
-            # Make sure that the data we are syncing is newer than what we already have
-            if last_modified <= course_instance.last_modified:
-                return False
-        except Course.DoesNotExist:
-            course_instance = None
+    # Get ocw course uid
+    ocw_course_uid = raw_jsons[0].get("_uid")
+    try:
+        course_instance = Course.objects.get(course_id=ocw_course_uid)
+        # Make sure that the data we are syncing is newer than what we already have
+        if last_modified <= course_instance.last_modified:
+            log.info("Already synced. No changes found for %s", course_prefix)
+            return
+    except Course.DoesNotExist:
+        course_instance = None
 
+    parser = OCWParser("", "", raw_jsons)
+    parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
+                              settings.OCW_LEARNING_COURSE_ACCESS_KEY,
+                              settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
+                              course_prefix.split("/")[-1])
+    # Upload all course media to S3 before serializing course to ensure the existence of links
+    parser.upload_all_media_to_s3()
+    # Get master json from parser
+    master_json = parser.master_json
+
+    with transaction.atomic():
         course_fields = {
             "course_id": master_json.get("uid"),
             "title": master_json.get("title"),
