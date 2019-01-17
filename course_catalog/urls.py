@@ -37,7 +37,5 @@ if settings.DEBUG:
 
 router = DefaultRouter()
 router.register(r'courses', CourseViewSet, basename='courses')
-router.register(r'courses/new', CourseViewSet, basename='courses')
-router.register(r'courses', CourseViewSet, basename='courses')
 
 urlpatterns += router.urls
