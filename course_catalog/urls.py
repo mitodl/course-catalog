@@ -17,9 +17,9 @@ from django.conf import settings
 from django.conf.urls import include
 from django.contrib import admin
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-from course_catalog.views import index
-
+from course_catalog.views import index, CourseViewSet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,3 +34,10 @@ if settings.DEBUG:
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls)),
     ]
+
+router = DefaultRouter()
+router.register(r'courses', CourseViewSet, basename='courses')
+router.register(r'courses/new', CourseViewSet, basename='courses')
+router.register(r'courses', CourseViewSet, basename='courses')
+
+urlpatterns += router.urls
