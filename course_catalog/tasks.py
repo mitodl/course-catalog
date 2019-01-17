@@ -5,10 +5,13 @@ import logging
 
 import requests
 import boto3
+from botocore.exceptions import ReadTimeoutError
+from ocw_data_parser import OCWParser
 from celery.task import task
 from django.conf import settings
 from course_catalog.constants import NON_COURSE_DIRECTORIES
 from course_catalog.settings import EDX_API_URL
+from course_catalog.models import Course
 from course_catalog.tasks_helpers import (get_access_token,
                                           parse_mitx_json_data,
                                           load_json_from_string,
@@ -68,10 +71,30 @@ def get_ocw_data():
         last_modified_dates = []
         print("Digesting: " + course_prefix + " ...")
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
-            loaded_raw_jsons_for_course.append(load_json_from_string(obj.get()["Body"].read()))
-            last_modified_dates.append(obj.get()["LastModified"])
+            # Grabbing 1.json for the course. 1.json contains meta data for course (e.g. _uid)
+            if obj.key == course_prefix + "/0/1.json":
+                first_json = load_json_from_string(obj.get()["Body"].read(), obj.key)
+            last_modified_dates.append(obj.last_modified)
+        last_modified = max(last_modified_dates)
+        try:
+            course_instance = Course.objects.get(course_id=first_json.get("_uid"))
+            # Make sure that the data we are syncing is newer than what we already have
+            if last_modified <= course_instance.last_modified:
+                log.info("Already synced. No changes found for %s", course_prefix)
+                continue
+        except Course.DoesNotExist:
+            course_instance = None
+        for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
+            loaded_raw_jsons_for_course.append(load_json_from_string(obj.get()["Body"].read(), obj.key))
+        parser = OCWParser("", "", loaded_raw_jsons_for_course)
+        parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
+                                  settings.OCW_LEARNING_COURSE_ACCESS_KEY,
+                                  settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
+                                  course_prefix.split("/")[-1])
+        # Upload all course media to S3 before serializing course to ensure the existence of links
+        parser.upload_all_media_to_s3()
 
         try:
-            digest_ocw_course(loaded_raw_jsons_for_course, sorted(last_modified_dates)[-1], course_prefix)
+            digest_ocw_course(parser.master_json, last_modified, course_instance)
         except Exception:  # pylint: disable=broad-except
             log.exception("Error encountered parsing OCW json for %s", course_prefix)
