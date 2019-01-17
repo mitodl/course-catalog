@@ -9,7 +9,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from course_catalog.models import Course, CourseInstructor, CoursePrice, CourseTopic
-from course_catalog.tasks_helpers import parse_mitx_json_data, digest_ocw_course_master_json, get_ocw_topic
+from course_catalog.tasks_helpers import parse_mitx_json_data, digest_ocw_course, get_ocw_topic
 
 pytestmark = pytest.mark.django_db
 
@@ -341,9 +341,9 @@ def test_deserializing_a_valid_ocw_course():
         ],
         "price": {"price": 0.0, "mode": "audit", "upgrade_deadline": None},
     }
-    assert digest_ocw_course_master_json(valid_ocw_obj, timezone.now())
+    assert digest_ocw_course(valid_ocw_obj, timezone.now())
     assert Course.objects.count() == 1
-    assert not digest_ocw_course_master_json(valid_ocw_obj, timezone.now() - timedelta(hours=1))
+    assert not digest_ocw_course(valid_ocw_obj, timezone.now() - timedelta(hours=1))
     assert Course.objects.count() == 1
 
     course_instructors_count = CourseInstructor.objects.count()
@@ -425,5 +425,5 @@ def test_deserialzing_an_invalid_ocw_course():
         ],
         "price": {"price": 0.0, "upgrade_deadline": None},
     }
-    assert not digest_ocw_course_master_json(invalid_ocw_obj, timezone.now())
+    assert not digest_ocw_course(invalid_ocw_obj, timezone.now())
     assert not Course.objects.count()
