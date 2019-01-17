@@ -84,4 +84,4 @@ def get_ocw_data():
             if data_updated:
                 parser.upload_all_media_to_s3()
         except Exception:  # pylint: disable=broad-except
-            log.exception("Error encountered parsing OCW json")
+            log.exception("Error encountered parsing OCW json for %s", course_prefix)

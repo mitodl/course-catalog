@@ -198,9 +198,6 @@ def digest_ocw_course_master_json(master_json, last_modified):
 
         course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
         if not course_serializer.is_valid():
-            # course_fields.pop('raw_json')
-            # print(course_fields)
-            # print(course_serializer.errors)
             log.error("Course %s is not valid: %s", master_json.get("uid"), course_serializer.errors)
             return False
         course = course_serializer.save()
@@ -232,7 +229,13 @@ def digest_ocw_course_master_json(master_json, last_modified):
 def get_ocw_topic(topic_object):
     """
     Gets ocw_feature if that fails then ocw_subfeature and if that fails then ocw_speciality
-    """
+
+     Args:
+         topic_object (dict): The JSON object representing the topic
+
+     Returns:
+         list of str: list of topics
+     """
 
     # Get topic list by specialty first, subfeature second, and feature third
     topics = (ocw_edx_mapping.get(topic_object.get("ocw_speciality")) or
