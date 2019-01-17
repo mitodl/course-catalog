@@ -62,6 +62,7 @@ class Course(TimestampedModel):
     image_description = models.CharField(max_length=1024, null=True, blank=True)
     last_modified = models.DateTimeField(null=True, blank=True)
     raw_json = JSONField(null=True, blank=True)
+    featured = models.BooleanField(default=False)
     instructors = models.ManyToManyField(CourseInstructor, blank=True, related_name="courses")
     topics = models.ManyToManyField(CourseTopic, blank=True, related_name="courses")
     prices = models.ManyToManyField(CoursePrice, blank=True, related_name="courses")
