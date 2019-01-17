@@ -199,7 +199,7 @@ def digest_ocw_course_master_json(master_json, last_modified):
         course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
         if not course_serializer.is_valid():
             log.error("Course %s is not valid: %s", master_json.get("uid"), course_serializer.errors)
-            return False
+            return
         course = course_serializer.save()
 
         # Clear previous topics, instructors, and prices

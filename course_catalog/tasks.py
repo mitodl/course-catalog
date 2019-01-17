@@ -55,7 +55,7 @@ def get_ocw_data():
 
     # Get all the courses keys
     ocw_courses = set()
-    # print("Assembling list of courses...")
+    print("Assembling list of courses...")
     for file in raw_data_bucket.objects.all():
         key_pieces = file.key.split("/")
         course_prefix = key_pieces[0] + "/" + key_pieces[1]
@@ -67,7 +67,7 @@ def get_ocw_data():
     for course_prefix in ocw_courses:
         loaded_raw_jsons_for_course = []
         last_modified_dates = []
-        # print("Digesting: " + course_prefix + " ...")
+        print("Digesting: " + course_prefix + " ...")
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
             loaded_raw_jsons_for_course.append(load_json_from_string(obj.get()["Body"].read()))
             last_modified_dates.append(obj.get()["LastModified"])
@@ -77,11 +77,10 @@ def get_ocw_data():
                                   settings.OCW_LEARNING_COURSE_ACCESS_KEY,
                                   settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
                                   course_prefix.split("/")[-1])
+        parser.upload_all_media_to_s3()
         # Get master json from parser
         master_json = parser.master_json
         try:
-            data_updated = digest_ocw_course_master_json(master_json, sorted(last_modified_dates)[-1])
-            if data_updated:
-                parser.upload_all_media_to_s3()
+            digest_ocw_course_master_json(master_json, sorted(last_modified_dates)[-1])
         except Exception:  # pylint: disable=broad-except
             log.exception("Error encountered parsing OCW json for %s", course_prefix)
