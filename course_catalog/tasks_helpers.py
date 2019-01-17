@@ -8,8 +8,6 @@ from datetime import datetime
 import pytz
 import requests
 from django.db import transaction
-from django.conf import settings
-from ocw_data_parser import OCWParser
 from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_KEYS, ocw_edx_mapping
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
@@ -177,7 +175,6 @@ def load_json_from_string(s, corrupted_json_key):
 def digest_ocw_course(master_json, last_modified, course_instance):
     """
     Takes in OCW course master json to store it in DB
-    Returns True if the course was updated and False otherwise
     """
     course_fields = {
         "course_id": master_json.get("uid"),

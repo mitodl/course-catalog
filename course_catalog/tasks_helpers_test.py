@@ -341,9 +341,9 @@ def test_deserializing_a_valid_ocw_course():
         ],
         "price": {"price": 0.0, "mode": "audit", "upgrade_deadline": None},
     }
-    assert digest_ocw_course(valid_ocw_obj, timezone.now())
+    assert digest_ocw_course(valid_ocw_obj, timezone.now(), None)
     assert Course.objects.count() == 1
-    assert not digest_ocw_course(valid_ocw_obj, timezone.now() - timedelta(hours=1))
+    assert not digest_ocw_course(valid_ocw_obj, timezone.now() - timedelta(hours=1), None)
     assert Course.objects.count() == 1
 
     course_instructors_count = CourseInstructor.objects.count()
@@ -425,5 +425,5 @@ def test_deserialzing_an_invalid_ocw_course():
         ],
         "price": {"price": 0.0, "upgrade_deadline": None},
     }
-    assert not digest_ocw_course(invalid_ocw_obj, timezone.now())
+    assert not digest_ocw_course(invalid_ocw_obj, timezone.now(), None)
     assert not Course.objects.count()

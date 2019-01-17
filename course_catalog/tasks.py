@@ -5,7 +5,6 @@ import logging
 
 import requests
 import boto3
-from botocore.exceptions import ReadTimeoutError
 from ocw_data_parser import OCWParser
 from celery.task import task
 from django.conf import settings
