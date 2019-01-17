@@ -8,9 +8,8 @@ import pytest
 from django.test import TestCase
 from django.utils import timezone
 
-from course_catalog.models import Course
-from course_catalog.tasks_helpers import parse_mitx_json_data, digest_ocw_course_master_json
-
+from course_catalog.models import Course, CourseInstructor, CoursePrice, CourseTopic
+from course_catalog.tasks_helpers import parse_mitx_json_data, digest_ocw_course_master_json, get_ocw_topic
 
 pytestmark = pytest.mark.django_db
 
@@ -240,6 +239,15 @@ class MITXParseTest(TestCase):
         courses_count = Course.objects.count()
         self.assertEqual(courses_count, 1)
 
+        course_instructors_count = CourseInstructor.objects.count()
+        self.assertEqual(course_instructors_count, 2)
+
+        course_prices_count = CoursePrice.objects.count()
+        self.assertEqual(course_prices_count, 2)
+
+        course_topics_count = CourseTopic.objects.count()
+        self.assertEqual(course_topics_count, 1)
+
     def test_parse_invalid_mitx_json_data(self):
         """
         Test parsing invalid mitx json data
@@ -265,7 +273,7 @@ def test_deserializing_a_valid_ocw_course():
     """
     Verify that OCWSerializer successfully de-serialize a JSON object and create Course model instance
     """
-    valid_ocw_course_master_obj = {
+    valid_ocw_obj = {
         "uid": "e9387c256bae4ca99cce88fd8b7f8272",
         "title": "Undergraduate Thesis Tutorial",
         "description": "<p>This course is a series of lectures on prospectus and thesis writing</p>",
@@ -320,7 +328,7 @@ def test_deserializing_a_valid_ocw_course():
                 "ocw_feature": "Engineering",
                 "ocw_subfeature": "Nuclear Engineering",
                 "ocw_feature_url": "",
-                "ocw_speciality": "",
+                "ocw_speciality": "Health and Exercise Science",
                 "ocw_feature_notes": "",
             },
             {
@@ -333,15 +341,26 @@ def test_deserializing_a_valid_ocw_course():
         ],
         "price": {"price": 0.0, "mode": "audit", "upgrade_deadline": None},
     }
-    assert digest_ocw_course_master_json(valid_ocw_course_master_obj, timezone.now())
-    assert not digest_ocw_course_master_json(valid_ocw_course_master_obj, timezone.now() - timedelta(hours=1))
+    assert digest_ocw_course_master_json(valid_ocw_obj, timezone.now())
+    assert Course.objects.count() == 1
+    assert not digest_ocw_course_master_json(valid_ocw_obj, timezone.now() - timedelta(hours=1))
+    assert Course.objects.count() == 1
+
+    course_instructors_count = CourseInstructor.objects.count()
+    assert course_instructors_count == len(valid_ocw_obj.get("instructors"))
+
+    course_prices_count = CoursePrice.objects.count()
+    assert course_prices_count == 1
+
+    course_topics_count = CourseTopic.objects.count()
+    assert course_topics_count == sum(len(get_ocw_topic(cc)) for cc in valid_ocw_obj.get("course_collections"))
 
 
 def test_deserialzing_an_invalid_ocw_course():
     """
     Verifies that OCWSerializer validation works correctly if the OCW course has invalid values
     """
-    invalid_ocw_course_master_obj = {
+    invalid_ocw_obj = {
         "uid": "",
         "title": "",
         "description": "",
@@ -406,4 +425,5 @@ def test_deserialzing_an_invalid_ocw_course():
         ],
         "price": {"price": 0.0, "upgrade_deadline": None},
     }
-    assert not digest_ocw_course_master_json(invalid_ocw_course_master_obj, timezone.now())
+    assert not digest_ocw_course_master_json(invalid_ocw_obj, timezone.now())
+    assert not Course.objects.count()

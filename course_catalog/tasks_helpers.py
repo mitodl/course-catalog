@@ -212,9 +212,9 @@ def digest_ocw_course_master_json(master_json, last_modified):
 
         # Handle topics
         for topic_obj in master_json.get("course_collections"):
-            topic_name = get_ocw_topic(topic_obj)
-            if topic_name:
-                course_topic, _ = CourseTopic.objects.get_or_create(name=topic_name)
+            topics = get_ocw_topic(topic_obj)
+            for topic in topics:
+                course_topic, _ = CourseTopic.objects.get_or_create(name=topic)
                 course.topics.add(course_topic)
 
         # Handle instructors
@@ -237,6 +237,6 @@ def get_ocw_topic(topic_object):
     # Get topic list by specialty first, subfeature second, and feature third
     topics = (ocw_edx_mapping.get(topic_object.get("ocw_speciality")) or
               ocw_edx_mapping.get(topic_object.get("ocw_subfeature")) or
-              ocw_edx_mapping.get(topic_object.get("ocw_feature")))
+              ocw_edx_mapping.get(topic_object.get("ocw_feature")) or [])
 
     return topics
