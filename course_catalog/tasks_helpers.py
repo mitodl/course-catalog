@@ -8,10 +8,10 @@ from datetime import datetime
 import pytz
 import requests
 from django.db import transaction
+from django.conf import settings
 from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_KEYS, ocw_edx_mapping
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
-from course_catalog.settings import EDX_API_CLIENT_ID, EDX_API_CLIENT_SECRET
 
 
 log = logging.getLogger(__name__)
@@ -23,8 +23,8 @@ def get_access_token():
     """
     post_data = {
         "grant_type": "client_credentials",
-        "client_id": EDX_API_CLIENT_ID,
-        "client_secret": EDX_API_CLIENT_SECRET,
+        "client_id": settings.EDX_API_CLIENT_ID,
+        "client_secret": settings.EDX_API_CLIENT_SECRET,
         "token_type": "jwt"
     }
     response = requests.post("https://api.edx.org/oauth2/v1/access_token", data=post_data)
@@ -39,7 +39,6 @@ def parse_mitx_json_data(course_data):
     # Make sure this is an MIT course
     if not is_mit_course(course_data):
         return
-
 
     # Get the last modified date from the course data
     course_modified = course_data.get("modified")

@@ -9,7 +9,6 @@ from ocw_data_parser import OCWParser
 from celery.task import task
 from django.conf import settings
 from course_catalog.constants import NON_COURSE_DIRECTORIES
-from course_catalog.settings import EDX_API_URL
 from course_catalog.models import Course
 from course_catalog.tasks_helpers import (get_access_token,
                                           parse_mitx_json_data,
@@ -25,7 +24,7 @@ def get_edx_data():
     """
     Task to sync mitx data with the database
     """
-    url = EDX_API_URL
+    url = settings.EDX_API_URL
 
     while url:
         access_token = get_access_token()
@@ -69,7 +68,7 @@ def get_ocw_data():
         loaded_raw_jsons_for_course = []
         last_modified_dates = []
         course_id = None
-        log.info("Syncing: %s ..." % course_prefix)
+        log.info("Syncing: %s ...", course_prefix)
         # Collect last modified timestamps for all course files of the course
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
             # the "1.json" metadata file contains a course's uid
@@ -109,4 +108,4 @@ def get_ocw_data():
             master_json = parser.master_json
             digest_ocw_course(master_json, last_modified, course_instance)
         except Exception as e:  # pylint: disable=broad-except
-            log.exception("Error encountered parsing OCW json for %s: %s", (course_prefix, e))
+            log.exception("Error encountered parsing OCW json for %s: %s", course_prefix, e)
