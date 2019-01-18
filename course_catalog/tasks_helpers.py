@@ -33,7 +33,10 @@ def get_access_token():
 
 def parse_mitx_json_data(course_data):
     """
-    Main function to parse edx json data
+    Main function to parse edx json data for one course
+
+    Args:
+        course_data (dict): The JSON object representing the course with all its course runs
     """
 
     # Make sure this is an MIT course
@@ -100,6 +103,11 @@ def parse_mitx_json_data(course_data):
 def handle_many_to_many_fields(course, course_data, course_run):
     """
     Helper function to create or link the many to many fields
+
+    Args:
+        course (Course): Course instance
+        course_data (dict): The JSON object representing the course with all its course runs
+        course_run (dict): The JSON object representing the particular course run
     """
     # Clear out topics and re-add them
     course.topics.clear()
@@ -129,6 +137,12 @@ def handle_many_to_many_fields(course, course_data, course_run):
 def is_mit_course(course_data):
     """
     Helper function to determine if a course is an MIT course
+
+    Args:
+        course_data (dict): The JSON object representing the course with all its course runs
+
+    Returns:
+        bool: indicates whether the course is owned by MIT
     """
     for owner in course_data.get("owners"):
         if owner["key"] in MIT_OWNER_KEYS:
@@ -138,8 +152,15 @@ def is_mit_course(course_data):
 
 def get_year_and_semester(course_run, course_run_key):
     """
-    Parse year and semester out of course run key.
-    If course run key cannot be parsed attempt to get year from start
+    Parse year and semester out of course run key. If course run key cannot be parsed attempt to get year from start.
+
+    Args:
+        course_run (dict): The JSON object representing the particular course run
+        course_run_key (string): course run identifier
+
+    Returns:
+        tuple (string, string): year, semester
+
     """
     match = re.search("[1|2|3]T[0-9]{4}", course_run_key)  # e.g. "3T2019" -> Semester "3", Year "2019"
     if match:
@@ -156,22 +177,34 @@ def get_year_and_semester(course_run, course_run_key):
     return year, semester
 
 
-def safe_load_json(s, corrupted_json_key):
+def safe_load_json(json_string, json_file_key):
     """
     Loads the passed string as a JSON object with exception handing and logging.
     Some OCW JSON content may be malformed.
+
+    Args:
+        json_string (string): The JSON contents as a string
+        json_file_key: file ID for the JSON file
+
+    Returns:
+        JSON (dict): the JSON contents as JSON
     """
     try:
-        loaded_json = json.loads(s)
+        loaded_json = json.loads(json_string)
         return loaded_json
     except json.JSONDecodeError:
-        log.exception("%s has a corrupted JSON", corrupted_json_key)
+        log.exception("%s has a corrupted JSON", json_file_key)
         return {}
 
 
 def digest_ocw_course(master_json, last_modified, course_instance):
     """
     Takes in OCW course master json to store it in DB
+
+    Args:
+        master_json (dict): course master JSON object as an output from ocw-data-parser
+        last_modified (datetime): timestamp of latest modification of all course files
+        course_instance (Course): Course instance if exists, otherwise None
     """
     course_fields = {
         "course_id": master_json.get("uid"),

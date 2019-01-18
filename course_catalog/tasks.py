@@ -96,13 +96,14 @@ def get_ocw_data():
         # fetch JSON contents for each course file in memory (slow)
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
             loaded_raw_jsons_for_course.append(safe_load_json(obj.get()["Body"].read(), obj.key))
-        # pass course contents into parser
-        parser = OCWParser("", "", loaded_raw_jsons_for_course)
-        parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
-                                  settings.OCW_LEARNING_COURSE_ACCESS_KEY,
-                                  settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
-                                  course_prefix.split("/")[-1])
+
         try:
+            # pass course contents into parser
+            parser = OCWParser("", "", loaded_raw_jsons_for_course)
+            parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
+                                      settings.OCW_LEARNING_COURSE_ACCESS_KEY,
+                                      settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
+                                  course_prefix.split("/")[-1])
             # Upload all course media to S3 before serializing course to ensure the existence of links
             parser.upload_all_media_to_s3()
             master_json = parser.master_json
