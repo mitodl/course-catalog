@@ -42,4 +42,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        exclude = ('raw_json',)
+        fields = "__all__"
+        extra_kwargs = {
+            "raw_json": {"write_only": True}
+        }
