@@ -13,7 +13,7 @@ from course_catalog.settings import EDX_API_URL
 from course_catalog.models import Course
 from course_catalog.tasks_helpers import (get_access_token,
                                           parse_mitx_json_data,
-                                          load_json_from_string,
+                                          safe_load_json,
                                           digest_ocw_course)
 
 
@@ -26,8 +26,8 @@ def get_edx_data():
     Task to sync mitx data with the database
     """
     url = EDX_API_URL
+
     while url:
-        # print(url)
         access_token = get_access_token()
         response = requests.get(url, headers={"Authorization": "JWT " + access_token})
         if response.status_code == 200:
@@ -56,7 +56,7 @@ def get_ocw_data():
 
     # Get all the courses keys
     ocw_courses = set()
-    print("Assembling list of courses...")
+    log.info("Assembling list of courses...")
     for file in raw_data_bucket.objects.all():
         key_pieces = file.key.split("/")
         course_prefix = key_pieces[0] + "/" + key_pieces[1]
@@ -64,36 +64,49 @@ def get_ocw_data():
             if "/".join(key_pieces[:-2]) != "":
                 ocw_courses.add("/".join(key_pieces[:-2]))
 
-    # Query S3 Bucket for JSONs per course
+    # Loop over each course
     for course_prefix in ocw_courses:
         loaded_raw_jsons_for_course = []
         last_modified_dates = []
-        print("Digesting: " + course_prefix + " ...")
+        course_id = None
+        log.info("Syncing: %s ..." % course_prefix)
+        # Collect last modified timestamps for all course files of the course
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
-            # Grabbing 1.json for the course. 1.json contains meta data for course (e.g. _uid)
+            # the "1.json" metadata file contains a course's uid
             if obj.key == course_prefix + "/0/1.json":
-                first_json = load_json_from_string(obj.get()["Body"].read(), obj.key)
+                course_id = safe_load_json(obj.get()["Body"].read(), obj.key).get("_uid")
+                if not course_id:
+                    break
+            # accessing last_modified from s3 object summary is fast (does not download file contents)
             last_modified_dates.append(obj.last_modified)
+        if not course_id:
+            # skip if we're unable to fetch course's uid
+            continue
+        # get the latest modified timestamp of any file in the course
         last_modified = max(last_modified_dates)
         try:
-            course_instance = Course.objects.get(course_id=first_json.get("_uid"))
+            # if course synced before, update existing Course instance
+            course_instance = Course.objects.get(course_id=course_id)
             # Make sure that the data we are syncing is newer than what we already have
             if last_modified <= course_instance.last_modified:
                 log.info("Already synced. No changes found for %s", course_prefix)
                 continue
         except Course.DoesNotExist:
+            # create new Course instance
             course_instance = None
+        # fetch JSON contents for each course file in memory (slow)
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
-            loaded_raw_jsons_for_course.append(load_json_from_string(obj.get()["Body"].read(), obj.key))
+            loaded_raw_jsons_for_course.append(safe_load_json(obj.get()["Body"].read(), obj.key))
+        # pass course contents into parser
         parser = OCWParser("", "", loaded_raw_jsons_for_course)
         parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
                                   settings.OCW_LEARNING_COURSE_ACCESS_KEY,
                                   settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
                                   course_prefix.split("/")[-1])
-        # Upload all course media to S3 before serializing course to ensure the existence of links
-        parser.upload_all_media_to_s3()
-
         try:
-            digest_ocw_course(parser.master_json, last_modified, course_instance)
-        except Exception:  # pylint: disable=broad-except
-            log.exception("Error encountered parsing OCW json for %s", course_prefix)
+            # Upload all course media to S3 before serializing course to ensure the existence of links
+            parser.upload_all_media_to_s3()
+            master_json = parser.master_json
+            digest_ocw_course(master_json, last_modified, course_instance)
+        except Exception as e:  # pylint: disable=broad-except
+            log.exception("Error encountered parsing OCW json for %s: %s", (course_prefix, e))
