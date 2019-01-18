@@ -267,4 +267,4 @@ def cause_error():
     """
     Helper function created to insert exceptions into otherwise working code
     """
-    Exception("random error")
+    raise Exception("random error")
