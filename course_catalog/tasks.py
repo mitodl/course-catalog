@@ -13,7 +13,7 @@ from course_catalog.models import Course
 from course_catalog.tasks_helpers import (get_access_token,
                                           parse_mitx_json_data,
                                           safe_load_json,
-                                          digest_ocw_course)
+                                          digest_ocw_course, get_s3_object_and_read)
 
 
 log = logging.getLogger(__name__)
@@ -73,9 +73,10 @@ def get_ocw_data():
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
             # the "1.json" metadata file contains a course's uid
             if obj.key == course_prefix + "/0/1.json":
-                course_id = safe_load_json(obj.get()["Body"].read(), obj.key).get("_uid")
-                if not course_id:
-                    break
+                try:
+                    course_id = safe_load_json(get_s3_object_and_read(obj), obj.key).get("_uid")
+                except Exception:  # pylint: disable=broad-except
+                    log.exception("Error encountered reading 1.json for %s", course_prefix)
             # accessing last_modified from s3 object summary is fast (does not download file contents)
             last_modified_dates.append(obj.last_modified)
         if not course_id:
@@ -93,20 +94,19 @@ def get_ocw_data():
         except Course.DoesNotExist:
             # create new Course instance
             course_instance = None
-        # fetch JSON contents for each course file in memory (slow)
-        for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
-            loaded_raw_jsons_for_course.append(safe_load_json(obj.get()["Body"].read(), obj.key))
-
         try:
+            # fetch JSON contents for each course file in memory (slow)
+            for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
+                loaded_raw_jsons_for_course.append(safe_load_json(get_s3_object_and_read(obj), obj.key))
             # pass course contents into parser
             parser = OCWParser("", "", loaded_raw_jsons_for_course)
             parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
                                       settings.OCW_LEARNING_COURSE_ACCESS_KEY,
                                       settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
-                                  course_prefix.split("/")[-1])
+                                      course_prefix.split("/")[-1])
             # Upload all course media to S3 before serializing course to ensure the existence of links
             parser.upload_all_media_to_s3()
             master_json = parser.master_json
             digest_ocw_course(master_json, last_modified, course_instance)
-        except Exception as e:  # pylint: disable=broad-except
-            log.exception("Error encountered parsing OCW json for %s: %s", course_prefix, e)
+        except Exception:  # pylint: disable=broad-except
+            log.exception("Error encountered parsing OCW json for %s", course_prefix)
