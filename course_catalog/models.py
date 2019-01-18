@@ -47,9 +47,9 @@ class Course(TimestampedModel):
     """
     course_id = models.CharField(max_length=128, unique=True)
     title = models.CharField(max_length=256)
-    short_description = models.CharField(max_length=1024, null=True, blank=True)
+    short_description = models.TextField(null=True, blank=True)
     level = models.CharField(max_length=128, null=True, blank=True)
-    semester = models.CharField(max_length=10, null=True, blank=True)
+    semester = models.CharField(max_length=20, null=True, blank=True)
     language = models.CharField(max_length=128, null=True, blank=True)
     platform = models.CharField(max_length=128)
     year = models.IntegerField(null=True, blank=True)

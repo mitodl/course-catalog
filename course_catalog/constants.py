@@ -17,6 +17,19 @@ MIT_OWNER_KEYS = [
     'MITx_PRO',
 ]
 
+NON_COURSE_DIRECTORIES = [
+    "PROD/biology",
+    "PROD/chemistry",
+    "PROD/engineering",
+    "PROD/humanities-and-social-sciences",
+    "PROD/iit-jee",
+    "PROD/mathematics",
+    "PROD/more",
+    "PROD/physics",
+    "QA/do-not-publish",
+    "QA/engineering"
+]
+
 
 semester_mapping = {
     "1T": "spring",
