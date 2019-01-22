@@ -86,7 +86,7 @@ def parse_mitx_json_data(course_data):
             "image_src": (course_run.get("image") or {}).get("src"),
             "image_description": (course_run.get("image") or {}).get("description"),
             "last_modified": max_modified,
-            "raw_json": json.dumps(course_data),
+            "raw_json": course_data,
         }
 
         course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
