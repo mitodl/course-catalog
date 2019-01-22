@@ -5,14 +5,18 @@
 #    pip-compile --output-file requirements.txt requirements.in
 #
 amqp==2.3.2               # via kombu
-appnope==0.1.0            # via ipython
+asn1crypto==0.24.0        # via cryptography
+aws-xray-sdk==0.95        # via moto
 backcall==0.1.0           # via ipython
 billiard==3.5.0.5         # via celery
-boto3==1.9.69             # via ocw-data-parser
-botocore==1.12.69         # via boto3, s3transfer
+boto3==1.9.69             # via moto, ocw-data-parser
+boto==2.49.0              # via moto
+botocore==1.12.69         # via boto3, moto, s3transfer
 celery==4.2.0
 certifi==2018.11.29       # via requests
+cffi==1.11.5              # via cryptography
 chardet==3.0.4            # via requests
+cryptography==2.5         # via moto
 decorator==4.3.0          # via ipython, traitlets
 dj-database-url==0.4.2
 django-extensions==2.1.4
@@ -21,35 +25,56 @@ django-server-status==0.5.0
 django-webpack-loader==0.5.0
 django==2.0.10
 djangorestframework==3.9.0
+docker-pycreds==0.4.0     # via docker
+docker==3.7.0             # via moto
 docutils==0.14            # via botocore
+ecdsa==0.13               # via python-jose
 elasticsearch==6.3.1      # via django-server-status
 factory-boy==2.11.1
 faker==1.0.1
+future==0.17.1            # via python-jose
 idna==2.8                 # via requests
 ipython-genutils==0.2.0   # via traitlets
 ipython==7.2.0
 jedi==0.13.1              # via ipython
+jinja2==2.10              # via moto
 jmespath==0.9.3           # via boto3, botocore
+jsondiff==1.1.1           # via moto
+jsonpickle==1.0           # via aws-xray-sdk
 kombu==4.2.1              # via celery, django-server-status
+markupsafe==1.1.0         # via jinja2
+mock==2.0.0               # via moto
+moto==1.3.7
 newrelic==4.8.0.110
 ocw-data-parser==0.1.6
 parso==0.3.1              # via jedi
+pbr==5.1.1                # via mock
 pexpect==4.6.0            # via ipython
 pickleshare==0.7.5        # via ipython
 prompt-toolkit==2.0.7     # via ipython
 psycopg2==2.7.3.2
 ptyprocess==0.6.0         # via pexpect
+pyaml==18.11.0            # via moto
+pycparser==2.19           # via cffi
+pycryptodome==3.7.3       # via python-jose
 pygments==2.3.0           # via ipython
-python-dateutil==2.7.5    # via botocore, faker
-pytz==2018.7              # via celery, django, ocw-data-parser
+python-dateutil==2.7.5    # via botocore, faker, moto
+python-jose==2.0.2        # via moto
+pytz==2018.7              # via celery, django, moto, ocw-data-parser
+pyyaml==3.13              # via pyaml
 raven==6.9.0
 redis==2.10.6
 requests==2.21.0
+responses==0.10.5         # via moto
 s3transfer==0.1.13        # via boto3
-six==1.12.0               # via django-extensions, django-server-status, faker, prompt-toolkit, python-dateutil, traitlets
+six==1.12.0               # via cryptography, django-extensions, django-server-status, docker, docker-pycreds, faker, mock, moto, prompt-toolkit, python-dateutil, python-jose, responses, traitlets, websocket-client
 text-unidecode==1.2       # via faker
 traitlets==4.3.2          # via ipython
 urllib3==1.24.1           # via botocore, elasticsearch, requests
 uwsgi==2.0.17.1
 vine==1.1.4               # via amqp
 wcwidth==0.1.7            # via prompt-toolkit
+websocket-client==0.54.0  # via docker
+werkzeug==0.14.1          # via moto
+wrapt==1.11.1             # via aws-xray-sdk
+xmltodict==0.11.0         # via moto
