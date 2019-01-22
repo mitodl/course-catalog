@@ -20,9 +20,11 @@ log = logging.getLogger(__name__)
 
 
 @task
-def get_edx_data():
+def get_edx_data(force_overwrite=False):
     """
     Task to sync mitx data with the database
+    Args:
+        force_overwrite (bool): A boolean value to force the incoming course data to overwrite existing data
     """
     url = settings.EDX_API_URL
 
@@ -32,7 +34,7 @@ def get_edx_data():
         if response.status_code == 200:
             for course_data in response.json()["results"]:
                 try:
-                    parse_mitx_json_data(course_data)
+                    parse_mitx_json_data(course_data, force_overwrite)
                 except Exception:  # pylint: disable=broad-except
                     log.exception("Error encountered parsing MITx json")
         else:
