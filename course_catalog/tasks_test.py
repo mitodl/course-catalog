@@ -321,5 +321,4 @@ def cause_error():
     """
     Helper function created to insert exceptions into otherwise working code
     """
-    print("HERE")
     raise Exception("random error")
