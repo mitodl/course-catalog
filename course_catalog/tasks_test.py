@@ -317,6 +317,36 @@ def setup_s3(settings):
                                    Body=f.read())
 
 
+@mock_s3
+def test_get_ocw_data_error_parsing(settings, mocker):
+    """
+    Test that an error parsing ocw data is correctly logged
+    """
+    mocker.patch('course_catalog.tasks.OCWParser.setup_s3_uploading', side_effect=Exception)
+    mock_logger = mocker.patch('course_catalog.tasks.log.exception')
+    setup_s3(settings)
+    get_ocw_data()
+    mock_logger.assert_called_once_with(
+        "Error encountered parsing OCW json for %s",
+        "PROD/9/9.15/Fall_2007/9-15-biochemistry-and-pharmacology-of-synaptic-transmission-fall-2007"
+    )
+
+
+@mock_s3
+def test_get_ocw_data_error_reading_s3(settings, mocker):
+    """
+    Test that an error reading from S3 is correctly logged
+    """
+    mocker.patch('course_catalog.tasks.get_s3_object_and_read', side_effect=Exception)
+    mock_logger = mocker.patch('course_catalog.tasks.log.exception')
+    setup_s3(settings)
+    get_ocw_data()
+    mock_logger.assert_called_once_with(
+        "Error encountered reading 1.json for %s",
+        "PROD/9/9.15/Fall_2007/9-15-biochemistry-and-pharmacology-of-synaptic-transmission-fall-2007"
+    )
+
+
 def cause_error():
     """
     Helper function created to insert exceptions into otherwise working code
