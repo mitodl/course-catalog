@@ -60,7 +60,7 @@ def get_ocw_data():
     log.info("Assembling list of courses...")
     for file in raw_data_bucket.objects.all():
         key_pieces = file.key.split("/")
-        course_prefix = key_pieces[0] + "/" + key_pieces[1]
+        course_prefix = key_pieces[0] + "/" + key_pieces[1] if key_pieces[0] == "PROD" else key_pieces[0] + "/"
         if course_prefix not in NON_COURSE_DIRECTORIES:
             if "/".join(key_pieces[:-2]) != "":
                 ocw_courses.add("/".join(key_pieces[:-2]))
@@ -98,7 +98,7 @@ def get_ocw_data():
             course_instance = None
         try:
             # fetch JSON contents for each course file in memory (slow)
-            for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
+            for obj in raw_data_bucket.objects.filter(Prefix=course_prefix + "/"):
                 loaded_raw_jsons_for_course.append(safe_load_json(get_s3_object_and_read(obj), obj.key))
             # pass course contents into parser
             parser = OCWParser("", "", loaded_raw_jsons_for_course)
@@ -108,7 +108,7 @@ def get_ocw_data():
                                       course_prefix.split("/")[-1])
             # Upload all course media to S3 before serializing course to ensure the existence of links
             parser.upload_all_media_to_s3()
-            master_json = parser.master_json
+            master_json = parser.get_master_json()
             digest_ocw_course(master_json, last_modified, course_instance)
         except Exception:  # pylint: disable=broad-except
             log.exception("Error encountered parsing OCW json for %s", course_prefix)

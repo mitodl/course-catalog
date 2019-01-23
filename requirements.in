@@ -15,4 +15,4 @@ requests
 uwsgi
 djangorestframework
 django-extensions
-ocw-data-parser==0.1.6
+ocw-data-parser==0.1.7
