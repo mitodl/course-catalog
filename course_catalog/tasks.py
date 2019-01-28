@@ -98,7 +98,8 @@ def get_ocw_data():
             course_instance = None
         try:
             # fetch JSON contents for each course file in memory (slow)
-            for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
+            for obj in sorted(raw_data_bucket.objects.filter(Prefix=course_prefix),
+                              key=lambda x: int(x.key.split("/")[-1].split(".")[0])):
                 loaded_raw_jsons_for_course.append(safe_load_json(get_s3_object_and_read(obj), obj.key))
             # pass course contents into parser
             parser = OCWParser("", "", loaded_raw_jsons_for_course)
