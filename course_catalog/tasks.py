@@ -126,7 +126,8 @@ def get_ocw_data(upload_to_s3=True):
                                       course_prefix.split("/")[-2])
             if upload_to_s3:
                 # Upload all course media to S3 before serializing course to ensure the existence of links
-                parser.upload_all_media_to_s3()
+                # parser.upload_all_media_to_s3()
+                parser.upload_course_image()
             digest_ocw_course(parser.get_master_json(), last_modified, course_instance)
         except Exception:  # pylint: disable=broad-except
             log.exception("Error encountered parsing OCW json for %s", course_prefix)
