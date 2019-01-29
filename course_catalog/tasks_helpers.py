@@ -295,3 +295,18 @@ def get_s3_object_and_read(obj, iteration=0):
             return get_s3_object_and_read(obj, iteration+1)
         else:
             raise
+
+
+def format_date(date_str):
+    """ Coverts date from 2016/02/02 20:28:06 US/Eastern to 2016-02-02 20:28:06-05:00"""
+    if date_str and date_str != "None":
+        date_pieces = date_str.split(" ")  # e.g. 2016/02/02 20:28:06 US/Eastern
+        date_pieces[0] = date_pieces[0].replace("/", "-")
+        # Discard milliseconds if exists
+        date_pieces[1] = date_pieces[1][:-4] if "." in date_pieces[1] else date_pieces[1]
+        tz = date_pieces.pop(2)
+        timezone = pytz.timezone(tz) if "GMT" not in tz else pytz.timezone("Etc/" + tz)
+        tz_stripped_date = datetime.strptime(" ".join(date_pieces), "%Y-%m-%d %H:%M:%S")
+        tz_aware_date = timezone.localize(tz_stripped_date)
+        tz_aware_date = tz_aware_date.astimezone(pytz.utc)
+        return tz_aware_date

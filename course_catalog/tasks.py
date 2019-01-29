@@ -13,7 +13,9 @@ from course_catalog.models import Course
 from course_catalog.tasks_helpers import (get_access_token,
                                           parse_mitx_json_data,
                                           safe_load_json,
-                                          digest_ocw_course, get_s3_object_and_read)
+                                          digest_ocw_course,
+                                          get_s3_object_and_read,
+                                          format_date)
 
 
 log = logging.getLogger(__name__)
@@ -70,19 +72,28 @@ def get_ocw_data():
         loaded_raw_jsons_for_course = []
         last_modified_dates = []
         course_id = None
+        last_published_to_production = None
+        last_unpublishing_date = None
         log.info("Syncing: %s ...", course_prefix)
         # Collect last modified timestamps for all course files of the course
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
             # the "1.json" metadata file contains a course's uid
             if obj.key == course_prefix + "0/1.json":
                 try:
-                    course_id = safe_load_json(get_s3_object_and_read(obj), obj.key).get("_uid")
+                    first_json = safe_load_json(get_s3_object_and_read(obj), obj.key)
+                    course_id = first_json.get("_uid")
+                    last_published_to_production = format_date(first_json.get("last_published_to_production"))
+                    last_unpublishing_date = format_date(first_json.get("last_unpublishing_date"))
                 except Exception:  # pylint: disable=broad-except
                     log.exception("Error encountered reading 1.json for %s", course_prefix)
             # accessing last_modified from s3 object summary is fast (does not download file contents)
             last_modified_dates.append(obj.last_modified)
         if not course_id:
             # skip if we're unable to fetch course's uid
+            continue
+        if (last_published_to_production and last_unpublishing_date)\
+                and (last_unpublishing_date > last_published_to_production):
+            # skip in course has been retired
             continue
         # get the latest modified timestamp of any file in the course
         last_modified = max(last_modified_dates)
