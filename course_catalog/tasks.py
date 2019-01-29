@@ -8,7 +8,6 @@ import boto3
 from ocw_data_parser import OCWParser
 from celery.task import task
 from django.conf import settings
-from course_catalog.constants import NON_COURSE_DIRECTORIES
 from course_catalog.models import Course
 from course_catalog.tasks_helpers import (get_access_token,
                                           parse_mitx_json_data,

@@ -303,7 +303,7 @@ def get_s3_object_and_read(obj, iteration=0):
 def format_date(date_str):
     """
     Coverts date from 2016/02/02 20:28:06 US/Eastern to 2016-02-02 20:28:06-05:00
-    
+
     Args:
         date_str (String): Datetime object as string in the following format (2016/02/02 20:28:06 US/Eastern)
     Returns:
@@ -326,7 +326,7 @@ def format_date(date_str):
 def generate_course_prefix_list(bucket):
     """
     Assembles a list of OCW course prefixes from an S3 Bucket that contains all the raw jsons files
-    
+
     Args:
         bucket (s3.Bucket): Instantiated S3 Bucket object
     Returns:
