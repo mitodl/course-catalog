@@ -58,7 +58,7 @@ class Course(TimestampedModel):
     end_date = models.DateTimeField(null=True, blank=True)
     enrollment_start = models.DateTimeField(null=True, blank=True)
     enrollment_end = models.DateTimeField(null=True, blank=True)
-    image_src = models.URLField(null=True, blank=True)
+    image_src = models.URLField(max_length=400, null=True, blank=True)
     image_description = models.CharField(max_length=1024, null=True, blank=True)
     last_modified = models.DateTimeField(null=True, blank=True)
     raw_json = JSONField(null=True, blank=True)
