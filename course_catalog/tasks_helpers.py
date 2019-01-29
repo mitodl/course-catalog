@@ -200,7 +200,7 @@ def safe_load_json(json_string, json_file_key):
         return {}
 
 
-def digest_ocw_course(master_json, last_modified, course_instance):
+def digest_ocw_course(master_json, last_modified, course_instance, is_published):
     """
     Takes in OCW course master json to store it in DB
 
@@ -221,6 +221,7 @@ def digest_ocw_course(master_json, last_modified, course_instance):
         "image_src": master_json.get("image_src"),
         "image_description": master_json.get("image_description"),
         "last_modified": last_modified,
+        "published": is_published,
         "raw_json": master_json,
     }
 

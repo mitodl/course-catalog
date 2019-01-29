@@ -63,6 +63,7 @@ class Course(TimestampedModel):
     last_modified = models.DateTimeField(null=True, blank=True)
     raw_json = JSONField(null=True, blank=True)
     featured = models.BooleanField(default=False)
+    published = models.BooleanField(default=True)
     instructors = models.ManyToManyField(CourseInstructor, blank=True, related_name="courses")
     topics = models.ManyToManyField(CourseTopic, blank=True, related_name="courses")
     prices = models.ManyToManyField(CoursePrice, blank=True, related_name="courses")

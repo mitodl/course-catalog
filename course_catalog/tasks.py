@@ -73,8 +73,7 @@ def get_ocw_data(upload_to_s3=True):
         loaded_raw_jsons_for_course = []
         last_modified_dates = []
         course_id = None
-        last_published_to_production = None
-        last_unpublishing_date = None
+        is_published = True
         log.info("Syncing: %s ...", course_prefix)
         # Collect last modified timestamps for all course files of the course
         for obj in raw_data_bucket.objects.filter(Prefix=course_prefix):
@@ -85,19 +84,15 @@ def get_ocw_data(upload_to_s3=True):
                     course_id = first_json.get("_uid")
                     last_published_to_production = format_date(first_json.get("last_published_to_production"))
                     last_unpublishing_date = format_date(first_json.get("last_unpublishing_date"))
+                    if last_published_to_production is None or \
+                            (last_unpublishing_date and (last_unpublishing_date > last_published_to_production)):
+                        is_published = False
                 except Exception:  # pylint: disable=broad-except
                     log.exception("Error encountered reading 1.json for %s", course_prefix)
             # accessing last_modified from s3 object summary is fast (does not download file contents)
             last_modified_dates.append(obj.last_modified)
         if not course_id:
             # skip if we're unable to fetch course's uid
-            continue
-        # skip courses that have not yet been published to the live site or are testing courses
-        if last_published_to_production is None:
-            continue
-        # skip courses that have not been "unpublished" (archived/retired)
-        if last_unpublishing_date and (last_unpublishing_date > last_published_to_production):
-            # skip in course has been retired
             continue
         # get the latest modified timestamp of any file in the course
         last_modified = max(last_modified_dates)
@@ -118,16 +113,16 @@ def get_ocw_data(upload_to_s3=True):
                 loaded_raw_jsons_for_course.append(safe_load_json(get_s3_object_and_read(obj), obj.key))
             # pass course contents into parser
             parser = OCWParser("", "", loaded_raw_jsons_for_course)
-            parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
-                                      settings.OCW_LEARNING_COURSE_ACCESS_KEY,
-                                      settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
-                                      # course_prefix now has trailing slash so [-2] below is the last
-                                      # actual element and [-1] is an empty string
-                                      course_prefix.split("/")[-2])
-            if upload_to_s3:
+            if upload_to_s3 and is_published:
                 # Upload all course media to S3 before serializing course to ensure the existence of links
+                parser.setup_s3_uploading(settings.OCW_LEARNING_COURSE_BUCKET_NAME,
+                                          settings.OCW_LEARNING_COURSE_ACCESS_KEY,
+                                          settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
+                                          # course_prefix now has trailing slash so [-2] below is the last
+                                          # actual element and [-1] is an empty string
+                                          course_prefix.split("/")[-2])
                 # parser.upload_all_media_to_s3()
                 parser.upload_course_image()
-            digest_ocw_course(parser.get_master_json(), last_modified, course_instance)
+            digest_ocw_course(parser.get_master_json(), last_modified, course_instance, is_published)
         except Exception:  # pylint: disable=broad-except
             log.exception("Error encountered parsing OCW json for %s", course_prefix)
