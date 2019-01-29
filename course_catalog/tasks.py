@@ -47,7 +47,7 @@ def get_edx_data(force_overwrite=False):
 
 
 @task
-def get_ocw_data():
+def get_ocw_data(upload_to_s3=True):
     """
     Task to sync OCW course data with database
     """
@@ -57,17 +57,18 @@ def get_ocw_data():
         aws_secret_access_key=settings.OCW_CONTENT_SECRET_ACCESS_KEY
     ).Bucket(name=settings.OCW_CONTENT_BUCKET_NAME)
 
-    # Get all the courses keys
+    # get all the courses prefixes we care about
     ocw_courses = set()
     log.info("Assembling list of courses...")
     for file in raw_data_bucket.objects.all():
         key_pieces = file.key.split("/")
         course_prefix = "/".join(key_pieces[0:2]) if key_pieces[0] == "PROD" else key_pieces[0]
+        # retrieve courses, skipping non-courses (bootcamps, department topics, etc)
         if course_prefix not in NON_COURSE_DIRECTORIES:
             if "/".join(key_pieces[:-2]) != "":
                 ocw_courses.add("/".join(key_pieces[:-2]) + "/")
 
-    # Loop over each course
+    # loop over each course
     for course_prefix in ocw_courses:
         loaded_raw_jsons_for_course = []
         last_modified_dates = []
@@ -91,8 +92,11 @@ def get_ocw_data():
         if not course_id:
             # skip if we're unable to fetch course's uid
             continue
-        if (last_published_to_production and last_unpublishing_date)\
-                and (last_unpublishing_date > last_published_to_production):
+        # skip courses that have not yet been published to the live site or are testing courses
+        if last_published_to_production is None:
+            continue
+        # skip courses that have not been "unpublished" (archived/retired)
+        if last_unpublishing_date and (last_unpublishing_date > last_published_to_production):
             # skip in course has been retired
             continue
         # get the latest modified timestamp of any file in the course
@@ -120,8 +124,9 @@ def get_ocw_data():
                                       # course_prefix now has trailing slash so [-2] below is the last
                                       # actual element and [-1] is an empty string
                                       course_prefix.split("/")[-2])
-            # Upload all course media to S3 before serializing course to ensure the existence of links
-            parser.upload_all_media_to_s3()
+            if upload_to_s3:
+                # Upload all course media to S3 before serializing course to ensure the existence of links
+                parser.upload_all_media_to_s3()
             digest_ocw_course(parser.get_master_json(), last_modified, course_instance)
         except Exception:  # pylint: disable=broad-except
             log.exception("Error encountered parsing OCW json for %s", course_prefix)

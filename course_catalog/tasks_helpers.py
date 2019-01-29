@@ -310,3 +310,4 @@ def format_date(date_str):
         tz_aware_date = timezone.localize(tz_stripped_date)
         tz_aware_date = tz_aware_date.astimezone(pytz.utc)
         return tz_aware_date
+    return None
