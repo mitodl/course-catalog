@@ -15,7 +15,8 @@ from course_catalog.tasks_helpers import (get_access_token,
                                           safe_load_json,
                                           digest_ocw_course,
                                           get_s3_object_and_read,
-                                          format_date)
+                                          format_date,
+                                          generate_course_prefix_list)
 
 
 log = logging.getLogger(__name__)
@@ -58,15 +59,7 @@ def get_ocw_data(upload_to_s3=True):
     ).Bucket(name=settings.OCW_CONTENT_BUCKET_NAME)
 
     # get all the courses prefixes we care about
-    ocw_courses = set()
-    log.info("Assembling list of courses...")
-    for file in raw_data_bucket.objects.all():
-        key_pieces = file.key.split("/")
-        course_prefix = "/".join(key_pieces[0:2]) if key_pieces[0] == "PROD" else key_pieces[0]
-        # retrieve courses, skipping non-courses (bootcamps, department topics, etc)
-        if course_prefix not in NON_COURSE_DIRECTORIES:
-            if "/".join(key_pieces[:-2]) != "":
-                ocw_courses.add("/".join(key_pieces[:-2]) + "/")
+    ocw_courses = generate_course_prefix_list(raw_data_bucket)
 
     # loop over each course
     for course_prefix in ocw_courses:

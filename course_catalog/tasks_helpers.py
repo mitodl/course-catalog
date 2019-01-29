@@ -9,7 +9,8 @@ import pytz
 import requests
 from django.db import transaction
 from django.conf import settings
-from course_catalog.constants import PlatformType, semester_mapping, MIT_OWNER_KEYS, ocw_edx_mapping
+from course_catalog.constants import (PlatformType, semester_mapping, MIT_OWNER_KEYS, ocw_edx_mapping,
+                                      NON_COURSE_DIRECTORIES)
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
 
@@ -208,6 +209,7 @@ def digest_ocw_course(master_json, last_modified, course_instance, is_published)
         master_json (dict): course master JSON object as an output from ocw-data-parser
         last_modified (datetime): timestamp of latest modification of all course files
         course_instance (Course): Course instance if exists, otherwise None
+        is_published (Bool): Flags OCW course as published or not
     """
     course_fields = {
         "course_id": master_json.get("uid"),
@@ -299,7 +301,14 @@ def get_s3_object_and_read(obj, iteration=0):
 
 
 def format_date(date_str):
-    """ Coverts date from 2016/02/02 20:28:06 US/Eastern to 2016-02-02 20:28:06-05:00"""
+    """
+    Coverts date from 2016/02/02 20:28:06 US/Eastern to 2016-02-02 20:28:06-05:00
+    
+    Args:
+        date_str (String): Datetime object as string in the following format (2016/02/02 20:28:06 US/Eastern)
+    Returns:
+        Datetime object if passed date is valid, otherwise None
+    """
     if date_str and date_str != "None":
         date_pieces = date_str.split(" ")  # e.g. 2016/02/02 20:28:06 US/Eastern
         date_pieces[0] = date_pieces[0].replace("/", "-")
@@ -312,3 +321,24 @@ def format_date(date_str):
         tz_aware_date = tz_aware_date.astimezone(pytz.utc)
         return tz_aware_date
     return None
+
+
+def generate_course_prefix_list(bucket):
+    """
+    Assembles a list of OCW course prefixes from an S3 Bucket that contains all the raw jsons files
+    
+    Args:
+        bucket (s3.Bucket): Instantiated S3 Bucket object
+    Returns:
+        List of course prefixes
+    """
+    ocw_courses = set()
+    log.info("Assembling list of courses...")
+    for file in bucket.objects.all():
+        key_pieces = file.key.split("/")
+        course_prefix = "/".join(key_pieces[0:2]) if key_pieces[0] == "PROD" else key_pieces[0]
+        # retrieve courses, skipping non-courses (bootcamps, department topics, etc)
+        if course_prefix not in NON_COURSE_DIRECTORIES:
+            if "/".join(key_pieces[:-2]) != "":
+                ocw_courses.add("/".join(key_pieces[:-2]) + "/")
+    return list(ocw_courses)
