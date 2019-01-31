@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from course_catalog.views import index, CourseViewSet
+from course_catalog.views import index, CourseViewSet, ocw_course_report
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +27,7 @@ urlpatterns = [
 
     # Example view
     path('', index, name='course_catalog-index'),
+    path('ocw-course-report/', ocw_course_report, name="course_catalog-ocw_course_report")
 ]
 
 if settings.DEBUG:
