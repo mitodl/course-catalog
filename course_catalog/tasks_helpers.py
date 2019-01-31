@@ -201,6 +201,7 @@ def safe_load_json(json_string, json_file_key):
         return {}
 
 
+# pylint: disable=too-many-locals
 def digest_ocw_course(master_json, last_modified, course_instance, is_published, course_prefix=""):
     """
     Takes in OCW course master json to store it in DB
@@ -210,6 +211,7 @@ def digest_ocw_course(master_json, last_modified, course_instance, is_published,
         last_modified (datetime): timestamp of latest modification of all course files
         course_instance (Course): Course instance if exists, otherwise None
         is_published (Bool): Flags OCW course as published or not
+        course_prefix (String): (Optional) String used to query S3 bucket for course raw JSONs
     """
     course_fields = {
         "course_id": master_json.get("uid"),
