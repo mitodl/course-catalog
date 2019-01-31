@@ -201,7 +201,7 @@ def safe_load_json(json_string, json_file_key):
         return {}
 
 
-def digest_ocw_course(master_json, last_modified, course_instance, is_published):
+def digest_ocw_course(master_json, last_modified, course_instance, is_published, course_prefix=""):
     """
     Takes in OCW course master json to store it in DB
 
@@ -226,6 +226,8 @@ def digest_ocw_course(master_json, last_modified, course_instance, is_published)
         "published": is_published,
         "raw_json": master_json,
     }
+    if "PROD/RES" in course_prefix:
+        course_fields["is_resource"] = True
 
     course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
     if not course_serializer.is_valid():
