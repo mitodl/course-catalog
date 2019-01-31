@@ -10,7 +10,7 @@ import requests
 from django.db import transaction
 from django.conf import settings
 from course_catalog.constants import (PlatformType, semester_mapping, MIT_OWNER_KEYS, ocw_edx_mapping,
-                                      NON_COURSE_DIRECTORIES)
+                                      NON_COURSE_DIRECTORIES, ResourceType)
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
 
@@ -229,7 +229,7 @@ def digest_ocw_course(master_json, last_modified, course_instance, is_published,
         "raw_json": master_json,
     }
     if "PROD/RES" in course_prefix:
-        course_fields["is_resource"] = True
+        course_fields["learning_resource_type"] = ResourceType.ocw_resource.value
 
     course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
     if not course_serializer.is_valid():
