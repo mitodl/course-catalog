@@ -38,14 +38,16 @@ def ocw_course_report(request):
     """
     Returns a JSON object reporting OCW course sync statistics
     """
-    ocw_courses = Course.objects.filter(platform=PlatformType.ocw.value)
+    ocw_courses = Course.objects.filter(platform=PlatformType.ocw.value, is_resource=False)
     published_ocw_courses_with_image = ocw_courses.filter(published=True, image_src__isnull=False).count()
     unpublished_ocw_courses = ocw_courses.filter(published=False).count()
     ocw_courses_without_image = ocw_courses.filter(image_src="").count()
+    ocw_resources = Course.objects.filter(platform=PlatformType.ocw.value, is_resource=True).count()
     return Response({"total_number_of_ocw_courses": ocw_courses.count(),
                      "published_ocw_courses_with_image": published_ocw_courses_with_image,
                      "unpublished_ocw_courses": unpublished_ocw_courses,
-                     "ocw_courses_without_image": ocw_courses_without_image})
+                     "ocw_courses_without_image": ocw_courses_without_image,
+                     "ocw_resources": ocw_resources})
 
 
 class CoursePagination(LimitOffsetPagination):
