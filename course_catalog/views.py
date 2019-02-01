@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from course_catalog.models import Course
 from course_catalog.serializers import CourseSerializer
 from course_catalog.templatetags.render_bundle import public_path
-from course_catalog.constants import PlatformType
+from course_catalog.constants import PlatformType, ResourceType
 # pylint:disable=unused-argument
 
 
@@ -38,11 +38,13 @@ def ocw_course_report(request):
     """
     Returns a JSON object reporting OCW course sync statistics
     """
-    ocw_courses = Course.objects.filter(platform=PlatformType.ocw.value, is_resource=False)
+    ocw_courses = Course.objects.filter(platform=PlatformType.ocw.value,
+                                        learning_resource_type=ResourceType.course.value)
     published_ocw_courses_with_image = ocw_courses.filter(published=True, image_src__isnull=False).count()
     unpublished_ocw_courses = ocw_courses.filter(published=False).count()
     ocw_courses_without_image = ocw_courses.filter(image_src="").count()
-    ocw_resources = Course.objects.filter(platform=PlatformType.ocw.value, is_resource=True).count()
+    ocw_resources = Course.objects.filter(platform=PlatformType.ocw.value,
+                                          learning_resource_type=ResourceType.ocw_resource.value).count()
     return Response({"total_number_of_ocw_courses": ocw_courses.count(),
                      "published_ocw_courses_with_image": published_ocw_courses_with_image,
                      "unpublished_ocw_courses": unpublished_ocw_courses,
