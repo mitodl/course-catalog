@@ -74,8 +74,8 @@ def get_ocw_data(upload_to_s3=True):
                 try:
                     first_json = safe_load_json(get_s3_object_and_read(obj), obj.key)
                     course_id = first_json.get("_uid")
-                    last_published_to_production = format_date(first_json.get("last_published_to_production"))
-                    last_unpublishing_date = format_date(first_json.get("last_unpublishing_date"))
+                    last_published_to_production = format_date(first_json.get("last_published_to_production", None))
+                    last_unpublishing_date = format_date(first_json.get("last_unpublishing_date", None))
                     if last_published_to_production is None or \
                             (last_unpublishing_date and (last_unpublishing_date > last_published_to_production)):
                         is_published = False
