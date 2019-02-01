@@ -10,7 +10,7 @@ import requests
 from django.db import transaction
 from django.conf import settings
 from course_catalog.constants import (PlatformType, semester_mapping, MIT_OWNER_KEYS, ocw_edx_mapping,
-                                      NON_COURSE_DIRECTORIES)
+                                      NON_COURSE_DIRECTORIES, ResourceType)
 from course_catalog.models import Course, CourseTopic, CourseInstructor, CoursePrice
 from course_catalog.serializers import CourseSerializer
 
@@ -201,7 +201,8 @@ def safe_load_json(json_string, json_file_key):
         return {}
 
 
-def digest_ocw_course(master_json, last_modified, course_instance, is_published):
+# pylint: disable=too-many-locals
+def digest_ocw_course(master_json, last_modified, course_instance, is_published, course_prefix=""):
     """
     Takes in OCW course master json to store it in DB
 
@@ -210,6 +211,7 @@ def digest_ocw_course(master_json, last_modified, course_instance, is_published)
         last_modified (datetime): timestamp of latest modification of all course files
         course_instance (Course): Course instance if exists, otherwise None
         is_published (Bool): Flags OCW course as published or not
+        course_prefix (String): (Optional) String used to query S3 bucket for course raw JSONs
     """
     course_fields = {
         "course_id": master_json.get("uid"),
@@ -226,6 +228,8 @@ def digest_ocw_course(master_json, last_modified, course_instance, is_published)
         "published": is_published,
         "raw_json": master_json,
     }
+    if "PROD/RES" in course_prefix:
+        course_fields["learning_resource_type"] = ResourceType.ocw_resource.value
 
     course_serializer = CourseSerializer(data=course_fields, instance=course_instance)
     if not course_serializer.is_valid():

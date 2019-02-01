@@ -74,8 +74,8 @@ def get_ocw_data(upload_to_s3=True):
                 try:
                     first_json = safe_load_json(get_s3_object_and_read(obj), obj.key)
                     course_id = first_json.get("_uid")
-                    last_published_to_production = format_date(first_json.get("last_published_to_production"))
-                    last_unpublishing_date = format_date(first_json.get("last_unpublishing_date"))
+                    last_published_to_production = format_date(first_json.get("last_published_to_production", None))
+                    last_unpublishing_date = format_date(first_json.get("last_unpublishing_date", None))
                     if last_published_to_production is None or \
                             (last_unpublishing_date and (last_unpublishing_date > last_published_to_production)):
                         is_published = False
@@ -115,6 +115,6 @@ def get_ocw_data(upload_to_s3=True):
                                           course_prefix.split("/")[-2])
                 # parser.upload_all_media_to_s3()
                 parser.upload_course_image()
-            digest_ocw_course(parser.get_master_json(), last_modified, course_instance, is_published)
+            digest_ocw_course(parser.get_master_json(), last_modified, course_instance, is_published, course_prefix)
         except Exception:  # pylint: disable=broad-except
             log.exception("Error encountered parsing OCW json for %s", course_prefix)
