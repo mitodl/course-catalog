@@ -2,7 +2,7 @@
 course_catalog tasks
 """
 import logging
-
+import json
 import requests
 import boto3
 from ocw_data_parser import OCWParser
@@ -29,12 +29,18 @@ def get_edx_data(force_overwrite=False):
         force_overwrite (bool): A boolean value to force the incoming course data to overwrite existing data
     """
     url = settings.EDX_API_URL
+    edx_data = {
+        "count": 0,
+        "catalog_url": "",
+        "results": [],
+    }
 
     while url:
         access_token = get_access_token()
         response = requests.get(url, headers={"Authorization": "JWT " + access_token})
         if response.status_code == 200:
             for course_data in response.json()["results"]:
+                edx_data["results"].append(course_data)
                 try:
                     parse_mitx_json_data(course_data, force_overwrite)
                 except Exception:  # pylint: disable=broad-except
@@ -44,6 +50,13 @@ def get_edx_data(force_overwrite=False):
             break
 
         url = response.json()["next"]
+    edx_data["count"] = len(edx_data["results"])
+    raw_data_bucket = boto3.resource(
+        "s3",
+        aws_access_key_id=settings.OCW_LEARNING_COURSE_ACCESS_KEY,
+        aws_secret_access_key=settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
+    ).Bucket(name=settings.OCW_LEARNING_COURSE_BUCKET_NAME)
+    raw_data_bucket.put_object(Key="edx_courses_export.json", Body=json.dumps(edx_data), ACL="public-read")
 
 
 @task
