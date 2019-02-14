@@ -56,7 +56,7 @@ def get_edx_data(force_overwrite=False):
         aws_access_key_id=settings.OCW_LEARNING_COURSE_ACCESS_KEY,
         aws_secret_access_key=settings.OCW_LEARNING_COURSE_SECRET_ACCESS_KEY,
     ).Bucket(name=settings.OCW_LEARNING_COURSE_BUCKET_NAME)
-    raw_data_bucket.put_object(Key="edx_courses_export.json", Body=json.dumps(edx_data), ACL="public-read")
+    raw_data_bucket.put_object(Key="edx_courses_export.json", Body=json.dumps(edx_data))
 
 
 @task
